@@ -2,7 +2,6 @@
 
 /*
 (c) 2013-2014 Matthew Oertle <moertle@gmail.com>
-Avispa 0.1
  */
 
 (function() {
@@ -46,16 +45,25 @@ Avispa 0.1
 
   context = null;
 
-  window.Avispa = Backbone.View.extend({
-    events: {
+  window.Avispa = (function(_super) {
+    __extends(Avispa, _super);
+
+    function Avispa() {
+      return Avispa.__super__.constructor.apply(this, arguments);
+    }
+
+    Avispa.VERSION = '0.2';
+
+    Avispa.prototype.events = {
       'mousedown.avispa': 'OnMouseDown',
       'mousemove.avispa': 'OnMouseMove',
       'mouseup.avispa': 'OnMouseUp',
       'mousewheel.avispa': 'OnMouseWheel',
       'DOMMouseScroll.avispa': 'OnMouseWheel',
       'contextmenu.avispa': 'OnContextMenu'
-    },
-    initialize: function(options) {
+    };
+
+    Avispa.prototype.initialize = function(options) {
       context = this;
       _.bindAll(this, 'render', 'OnMouseDown', 'OnMouseMove', 'OnMouseUp', 'OnMouseWheel', 'OnContextMenu');
       this.scale = 1.0;
@@ -83,20 +91,23 @@ Avispa 0.1
       this.$pan.y = parseInt(window.innerHeight / 2);
       this.Pan(0, 0);
       return this;
-    },
-    Pan: function(dx, dy) {
+    };
+
+    Avispa.prototype.Pan = function(dx, dy) {
       this.$pan.x += dx;
       this.$pan.y += dy;
       this.$pan.attr('transform', "translate(" + this.$pan.x + ", " + this.$pan.y + ")");
       this.$parent.css('background-position', "" + this.$pan.x + "px " + this.$pan.y + "px");
       return this;
-    },
-    Scale: function(scale) {
+    };
+
+    Avispa.prototype.Scale = function(scale) {
       this.scale = scale;
       this.$zoom.attr('transform', "scale(" + scale + ")");
       return this;
-    },
-    Zoom: function(delta) {
+    };
+
+    Avispa.prototype.Zoom = function(delta) {
       var scale;
       if (delta === 0) {
         scale = 1.0;
@@ -108,8 +119,9 @@ Avispa 0.1
       }
       this.Scale(scale);
       return this;
-    },
-    Point: function(event) {
+    };
+
+    Avispa.prototype.Point = function(event) {
       var point;
       point = this.el.createSVGPoint();
       point.x = event.clientX;
@@ -118,8 +130,9 @@ Avispa 0.1
       point.x = parseInt((point.x - this.$pan.x) / this.scale);
       point.y = parseInt((point.y - this.$pan.y) / this.scale);
       return [point.x, point.y];
-    },
-    OnMouseDown: function(event) {
+    };
+
+    Avispa.prototype.OnMouseDown = function(event) {
       if (this.arrow != null) {
         this.arrow.Remove();
         this.arrow = null;
@@ -138,15 +151,18 @@ Avispa 0.1
           }
       }
       return cancelEvent(event);
-    },
-    LeftDown: function(event) {
+    };
+
+    Avispa.prototype.LeftDown = function(event) {
       this.offset = [event.clientX, event.clientY];
-    },
-    MiddleDown: function(event) {
+    };
+
+    Avispa.prototype.MiddleDown = function(event) {
       this.Pan(-this.$pan.x + window.innerWidth / 2, -this.$pan.y + window.innerHeight / 2);
       this.Zoom(0);
-    },
-    OnMouseMove: function(event) {
+    };
+
+    Avispa.prototype.OnMouseMove = function(event) {
       if (this.offset) {
         this.Pan(event.clientX - this.offset[0], event.clientY - this.offset[1]);
         this.offset = [event.clientX, event.clientY];
@@ -159,8 +175,9 @@ Avispa 0.1
         }
       }
       return cancelEvent(event);
-    },
-    OnMouseUp: function(event) {
+    };
+
+    Avispa.prototype.OnMouseUp = function(event) {
       var _ref;
       this.offset = null;
       if (this.dragItem != null) {
@@ -205,13 +222,18 @@ Avispa 0.1
         }
       }
       return cancelEvent(event);
-    },
-    OnMouseWheel: function(event) {
+    };
+
+    Avispa.prototype.OnMouseWheel = function(event) {
       this.Zoom(normalizeWheel(event));
       return cancelEvent(event);
-    },
-    OnContextMenu: function(event) {}
-  });
+    };
+
+    Avispa.prototype.OnContextMenu = function(event) {};
+
+    return Avispa;
+
+  })(Backbone.View);
 
   Avispa.BaseObject = Backbone.View.extend({
     events: {
@@ -356,6 +378,7 @@ Avispa 0.1
       Node.__super__.initialize.apply(this, arguments);
       this.$circle = $SVG('circle').attr('r', this.position.get('radius')).css('fill', this.position.get('fill')).appendTo(this.$el);
       this.$label = $SVG('text').attr('dy', '0.5em').text(this.options.label).appendTo(this.$el);
+      this.render();
     };
 
     Node.prototype.render = function() {

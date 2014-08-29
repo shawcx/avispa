@@ -1,6 +1,5 @@
     ###
     (c) 2013-2014 Matthew Oertle <moertle@gmail.com>
-    Avispa 0.1
     ###
 
 
@@ -57,7 +56,9 @@ The template for the main surface.
 
 Expose a global view class so that consumers of the API can instantiate a view.
 
-    window.Avispa = Backbone.View.extend
+    class window.Avispa extends Backbone.View
+
+        @VERSION: '0.2'
 
         events:
             'mousedown.avispa'      : 'OnMouseDown'
@@ -210,7 +211,6 @@ Expose a global view class so that consumers of the API can instantiate a view.
 The Avispa.BaseObject represents an abstract base class for Group and Node
 elements.  The root is an SVG G element that is translated when dragged.
 
-    #class Avispa.BaseObject extends Backbone.View
     Avispa.BaseObject = Backbone.View.extend
 
         events:
@@ -299,7 +299,6 @@ Base class for "group" objects
             return
 
         render: () ->
-            #@$el.attr('transform', "translate(#{@position.get('x')}, #{@position.get('y')})")
             @$rect
                 .attr('x', @position.get('x'))
                 .attr('y', @position.get('y'))
@@ -363,6 +362,8 @@ Base class for "node" objects
                 .attr('dy', '0.5em')
                 .text(@options.label)
                 .appendTo(@$el)
+
+            @render()
 
             return
 
