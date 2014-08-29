@@ -9,3 +9,5 @@ general purpose Javascript library for rendering graphs.
 Currently compiled with CoffeeScript 1.7.1 (http://coffeescript.org)
 
 Depends on jQuery, Underscore.js, and Backbone.js
+
+Demo at [http://moertle.github.io/avispa/](http://moertle.github.io/avispa/)
