@@ -5,7 +5,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   $(document).ready(function() {
-    var graph, group;
+    var graph, group, link, n1, n2;
     graph = new Graph({
       el: $('#surface svg')
     });
@@ -18,11 +18,21 @@
         x: 30,
         y: -50,
         w: 100,
-        h: 100,
-        fill: '#fcc'
+        h: 100
       })
     });
     graph.$groups.append(group.$el);
+    n1 = new Avispa.Node({
+      label: 'Node 1',
+      parent: group,
+      position: new Backbone.Model({
+        x: 25,
+        y: 45,
+        radius: 30,
+        fill: '#cfc'
+      })
+    });
+    graph.$objects.append(n1.$el);
     group = new ForemanGroup({
       model: new Backbone.Model({
         title: 'Group 2'
@@ -36,7 +46,22 @@
         fill: '#fcc'
       })
     });
-    return graph.$groups.append(group.$el);
+    graph.$groups.append(group.$el);
+    n2 = new Avispa.Node({
+      label: 'Node 2',
+      parent: group,
+      position: new Backbone.Model({
+        x: 25,
+        y: 45,
+        radius: 30
+      })
+    });
+    graph.$objects.append(n2.$el);
+    link = new Avispa.Link({
+      left: n1,
+      right: n2
+    });
+    return graph.$links.append(link.$el);
   });
 
   Graph = (function(_super) {
@@ -69,7 +94,7 @@
     };
 
     ForemanGroup.prototype.render = function() {
-      this.$rect.attr('x', this.position.get('x')).attr('y', this.position.get('y'));
+      ForemanGroup.__super__.render.apply(this, arguments);
       this.$label.attr('x', this.position.get('x')).attr('y', this.position.get('y'));
       return this;
     };
