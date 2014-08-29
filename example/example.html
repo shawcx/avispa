@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link type="text/css" rel="stylesheet" href="../dist/avispa.css" />
+  <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
+
+  <script type="text/javascript" src="../dist/avispa.js"></script>
+  <script type="text/javascript" src="example.js"></script>
+  <style><!--
+    div#surface
+    {
+        background: #fff;
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        top: 0em;
+        left: 0em;
+        right: 0em;
+        bottom: 0em;
+        z-index: 0;
+
+        background-color: #eeeeec;
+    }
+    div#surface svg
+    {
+        width: 100%;
+        height: 100%;
+    }
+  --></style>
+</head>
+<body>
+    <div id="surface">
+      <svg xmlns="http://www.w3.org/2000/svg" class="avispa">
+        <defs>
+         <marker id="Arrow"
+           viewBox="0 0 10 10" refX="7" refY="5"
+           markerUnits="strokeWidth"
+           markerWidth="4" markerHeight="4"
+           fill="#eee" stroke="#999" stroke-width="1px" stroke-dasharray="10,0"
+           orient="auto">
+          <path d="M 1 1 L 9 5 L 1 9 z" />
+         </marker>
+        </defs>
+        <g class="pan">
+         <g class="zoom">
+          <g class="groups"></g>
+          <g class="links"></g>
+          <g class="objects"></g>
+          <g class="labels"></g>
+         </g>
+        </g>
+      </svg>
+    </div>
+</body>
+</html>
