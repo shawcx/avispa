@@ -11,9 +11,19 @@
                 y: -50
                 w: 100
                 h: 100
-                fill: '#fcc'
 
         graph.$groups.append(group.$el)
+
+        n1 = new Avispa.Node
+            label:   'Node 1'
+            parent:   group
+            position: new Backbone.Model
+                x: 25
+                y: 45
+                radius: 30
+                fill: '#cfc'
+
+        graph.$objects.append(n1.$el)
 
         group = new ForemanGroup
             model:    new Backbone.Model(title:'Group 2')
@@ -26,6 +36,22 @@
                 fill: '#fcc'
 
         graph.$groups.append(group.$el)
+
+        n2 = new Avispa.Node
+            label:   'Node 2'
+            parent:   group
+            position: new Backbone.Model
+                x: 25
+                y: 45
+                radius: 30
+
+        graph.$objects.append(n2.$el)
+
+        link = new Avispa.Link
+            left:  n1
+            right: n2
+
+        graph.$links.append(link.$el)
 
 
     class Graph extends Avispa
@@ -47,12 +73,12 @@
             return @
 
         render: () ->
-            @$rect
-                .attr('x', @position.get('x'))
-                .attr('y', @position.get('y'))
+            super
+
             @$label
                 .attr('x', @position.get('x'))
                 .attr('y', @position.get('y'))
+
             return @
 
         OnMouseDown: (event) ->
