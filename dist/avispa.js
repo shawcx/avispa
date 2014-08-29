@@ -46,23 +46,16 @@ Avispa 0.1
 
   context = null;
 
-  window.Avispa = (function(_super) {
-    __extends(Avispa, _super);
-
-    function Avispa() {
-      return Avispa.__super__.constructor.apply(this, arguments);
-    }
-
-    Avispa.prototype.events = {
+  window.Avispa = Backbone.View.extend({
+    events: {
       'mousedown.avispa': 'OnMouseDown',
       'mousemove.avispa': 'OnMouseMove',
       'mouseup.avispa': 'OnMouseUp',
       'mousewheel.avispa': 'OnMouseWheel',
       'DOMMouseScroll.avispa': 'OnMouseWheel',
       'contextmenu.avispa': 'OnContextMenu'
-    };
-
-    Avispa.prototype.initialize = function(options) {
+    },
+    initialize: function(options) {
       context = this;
       _.bindAll(this, 'render', 'OnMouseDown', 'OnMouseMove', 'OnMouseUp', 'OnMouseWheel', 'OnContextMenu');
       this.scale = 1.0;
@@ -90,23 +83,20 @@ Avispa 0.1
       this.$pan.y = parseInt(window.innerHeight / 2);
       this.Pan(0, 0);
       return this;
-    };
-
-    Avispa.prototype.Pan = function(dx, dy) {
+    },
+    Pan: function(dx, dy) {
       this.$pan.x += dx;
       this.$pan.y += dy;
       this.$pan.attr('transform', "translate(" + this.$pan.x + ", " + this.$pan.y + ")");
       this.$parent.css('background-position', "" + this.$pan.x + "px " + this.$pan.y + "px");
       return this;
-    };
-
-    Avispa.prototype.Scale = function(scale) {
+    },
+    Scale: function(scale) {
       this.scale = scale;
       this.$zoom.attr('transform', "scale(" + scale + ")");
       return this;
-    };
-
-    Avispa.prototype.Zoom = function(delta) {
+    },
+    Zoom: function(delta) {
       var scale;
       if (delta === 0) {
         scale = 1.0;
@@ -118,9 +108,8 @@ Avispa 0.1
       }
       this.Scale(scale);
       return this;
-    };
-
-    Avispa.prototype.Point = function(event) {
+    },
+    Point: function(event) {
       var point;
       point = this.el.createSVGPoint();
       point.x = event.clientX;
@@ -129,10 +118,8 @@ Avispa 0.1
       point.x = parseInt((point.x - this.$pan.x) / this.scale);
       point.y = parseInt((point.y - this.$pan.y) / this.scale);
       return [point.x, point.y];
-    };
-
-    Avispa.prototype.OnMouseDown = function(event) {
-      console.log('Avispa Mouse Down');
+    },
+    OnMouseDown: function(event) {
       if (this.arrow != null) {
         this.arrow.Remove();
         this.arrow = null;
@@ -151,19 +138,15 @@ Avispa 0.1
           }
       }
       return cancelEvent(event);
-    };
-
-    Avispa.prototype.LeftDown = function(event) {
+    },
+    LeftDown: function(event) {
       this.offset = [event.clientX, event.clientY];
-    };
-
-    Avispa.prototype.MiddleDown = function(event) {
+    },
+    MiddleDown: function(event) {
       this.Pan(-this.$pan.x + window.innerWidth / 2, -this.$pan.y + window.innerHeight / 2);
       this.Zoom(0);
-      this.$('#zoomslider').slider('option', 'value', 1);
-    };
-
-    Avispa.prototype.OnMouseMove = function(event) {
+    },
+    OnMouseMove: function(event) {
       if (this.offset) {
         this.Pan(event.clientX - this.offset[0], event.clientY - this.offset[1]);
         this.offset = [event.clientX, event.clientY];
@@ -176,9 +159,8 @@ Avispa 0.1
         }
       }
       return cancelEvent(event);
-    };
-
-    Avispa.prototype.OnMouseUp = function(event) {
+    },
+    OnMouseUp: function(event) {
       var _ref;
       this.offset = null;
       if (this.dragItem != null) {
@@ -223,36 +205,23 @@ Avispa 0.1
         }
       }
       return cancelEvent(event);
-    };
-
-    Avispa.prototype.OnMouseWheel = function(event) {
+    },
+    OnMouseWheel: function(event) {
       this.Zoom(normalizeWheel(event));
-      this.$('#zoomslider').slider('option', 'value', this.scale);
       return cancelEvent(event);
-    };
+    },
+    OnContextMenu: function(event) {}
+  });
 
-    Avispa.prototype.OnContextMenu = function(event) {};
-
-    return Avispa;
-
-  })(Backbone.View);
-
-  Avispa.BaseObject = (function(_super) {
-    __extends(BaseObject, _super);
-
-    function BaseObject() {
-      return BaseObject.__super__.constructor.apply(this, arguments);
-    }
-
-    BaseObject.prototype.events = {
+  Avispa.BaseObject = Backbone.View.extend({
+    events: {
       'mousedown': 'OnMouseDown',
       'mouseenter': 'OnMouseEnter',
       'mouseleave': 'OnMouseLeave',
       'mouseup': 'OnMouseUp',
       'contextmenu': 'OnContextMenu'
-    };
-
-    BaseObject.prototype.initialize = function(options) {
+    },
+    initialize: function(options) {
       this.options = options;
       _.bindAll(this, 'OnMouseDown', 'OnMouseUp', 'OnContextMenu');
       this.position = this.options.position;
@@ -266,18 +235,15 @@ Avispa 0.1
         this.parent.position.bind('change', this.ParentDrag, this);
       }
       this.position.bind('change', this.render, this);
-      this.render();
       return this;
-    };
-
-    BaseObject.prototype.ParentDrag = function(ppos) {
+    },
+    ParentDrag: function(ppos) {
       this.position.set({
         x: this.offset.x + ppos.get('x'),
         y: this.offset.y + ppos.get('y')
       });
-    };
-
-    BaseObject.prototype.OnMouseDown = function(event) {
+    },
+    OnMouseDown: function(event) {
       this.jitter = 0;
       this.x1 = (event.clientX / context.scale) - this.position.get('x');
       this.y1 = (event.clientY / context.scale) - this.position.get('y');
@@ -290,9 +256,8 @@ Avispa 0.1
       }
       context.dragItem = this;
       return cancelEvent(event);
-    };
-
-    BaseObject.prototype.Drag = function(event) {
+    },
+    Drag: function(event) {
       var x, y;
       x = (event.clientX / context.scale) - this.x1;
       y = (event.clientY / context.scale) - this.y1;
@@ -301,15 +266,10 @@ Avispa 0.1
         'y': y
       });
       return cancelEvent(event);
-    };
-
-    BaseObject.prototype.OnMouseUp = function(event) {};
-
-    BaseObject.prototype.OnContextMenu = function(event) {};
-
-    return BaseObject;
-
-  })(Backbone.View.extend);
+    },
+    OnMouseUp: function(event) {},
+    OnContextMenu: function(event) {}
+  });
 
   Avispa.Group = (function(_super) {
     __extends(Group, _super);

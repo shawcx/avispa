@@ -54,9 +54,10 @@ The template for the main surface.
 
     context = null
 
+
 Expose a global view class so that consumers of the API can instantiate a view.
 
-    class window.Avispa extends Backbone.View
+    window.Avispa = Backbone.View.extend
 
         events:
             'mousedown.avispa'      : 'OnMouseDown'
@@ -139,7 +140,6 @@ Expose a global view class so that consumers of the API can instantiate a view.
             return [point.x, point.y]
 
         OnMouseDown: (event) ->
-            console.log 'Avispa Mouse Down'
             if @arrow?
                 @arrow.Remove()
                 @arrow = null
@@ -160,7 +160,7 @@ Expose a global view class so that consumers of the API can instantiate a view.
         MiddleDown: (event) ->
             @Pan(-@$pan.x + window.innerWidth / 2, -@$pan.y + window.innerHeight / 2)
             @Zoom(0)
-            @$('#zoomslider').slider('option', 'value', 1)
+            #@$('#zoomslider').slider('option', 'value', 1)
             return
 
         OnMouseMove: (event) ->
@@ -201,7 +201,7 @@ Expose a global view class so that consumers of the API can instantiate a view.
 
         OnMouseWheel: (event) ->
             @Zoom(normalizeWheel(event))
-            @$('#zoomslider').slider('option', 'value', @scale)
+            #@$('#zoomslider').slider('option', 'value', @scale)
             return cancelEvent(event)
 
         OnContextMenu: (event) ->
@@ -210,7 +210,8 @@ Expose a global view class so that consumers of the API can instantiate a view.
 The Avispa.BaseObject represents an abstract base class for Group and Node
 elements.  The root is an SVG G element that is translated when dragged.
 
-    class Avispa.BaseObject extends Backbone.View.extend
+    #class Avispa.BaseObject extends Backbone.View
+    Avispa.BaseObject = Backbone.View.extend
 
         events:
             'mousedown'   : 'OnMouseDown'
@@ -240,7 +241,6 @@ If we have a parent, keep track of our offset from the parent
 
             @position.bind 'change', @render, @
 
-            @render()
             return @
 
         ParentDrag: (ppos) ->
@@ -279,6 +279,7 @@ If we have a parent, keep track of our offset from the parent
         OnMouseUp: (event) ->
 
         OnContextMenu: (event) ->
+
 
 
 Base class for "group" objects
@@ -342,6 +343,8 @@ Base class for "group" objects
             @position.set 'x': x, 'y': y
 
             return cancelEvent(event)
+
+
 
 Base class for "node" objects
 
