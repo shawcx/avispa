@@ -418,10 +418,6 @@ Base class for "node" objects
 
 Base class for "link" objects
 
-    #Link = Backbone.View.extend
-    #    className: 'link'
-    #    initialize: () ->
-
     class Avispa.Link extends Backbone.View
         el: () -> $SVG('g').attr('class', 'link')
 
@@ -455,6 +451,9 @@ Bind to the position of the left and right sides of the connection
             @right.position.bind 'change', @render, @
 
             @render()
+
+            if @options.parent?
+                @options.parent.$links.append(@$el)
 
             return @
 
@@ -519,7 +518,7 @@ Events
                 @od = d
 
             # will trigger a call to render
-            @arc.set('arc', Math.max(10, @oarc + d - @od))
+            @arc.set('arc', Math.max(0, @oarc + d - @od))
 
             return
 

@@ -465,6 +465,9 @@
       this.left.position.bind('change', this.render, this);
       this.right.position.bind('change', this.render, this);
       this.render();
+      if (this.options.parent != null) {
+        this.options.parent.$links.append(this.$el);
+      }
       return this;
     };
 
@@ -514,7 +517,7 @@
       if (!this.od && this.od !== 0) {
         this.od = d;
       }
-      this.arc.set('arc', Math.max(10, this.oarc + d - this.od));
+      this.arc.set('arc', Math.max(0, this.oarc + d - this.od));
     };
 
     Link.prototype.OnMouseDown = function(event) {

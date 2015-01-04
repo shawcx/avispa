@@ -25,6 +25,17 @@
 
         graph.$objects.append(n1.$el)
 
+        n2 = new Avispa.Node
+            label:   'Node 2'
+            parent:   group
+            position: new Backbone.Model
+                x: 25
+                y: 45
+                radius: 30
+                fill: '#cfc'
+
+        graph.$objects.append(n2.$el)
+
         group = new ForemanGroup
             model:    new Backbone.Model(title:'Group 2')
             parent:   null
@@ -37,21 +48,25 @@
 
         graph.$groups.append(group.$el)
 
-        n2 = new Avispa.Node
-            label:   'Node 2'
+        n3 = new Avispa.Node
+            label:   'Node 3'
             parent:   group
             position: new Backbone.Model
                 x: 25
                 y: 45
                 radius: 30
 
-        graph.$objects.append(n2.$el)
+        graph.$objects.append(n3.$el)
 
         link = new Avispa.Link
-            left:  n1
-            right: n2
+            parent: graph
+            left:   n1
+            right:  n3
 
-        graph.$links.append(link.$el)
+        link = new Avispa.Link
+            parent: graph
+            left:   n3
+            right:  n2
 
 
     class Graph extends Avispa
