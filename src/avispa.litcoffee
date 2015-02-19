@@ -243,6 +243,10 @@ If we have a parent, keep track of our offset from the parent
 
             return @
 
+        Size: (w,h) ->
+            @position.set(w: w, h: h)
+            return @
+
         ParentDrag: (ppos) ->
             @position.set
                 x: @offset.x + ppos.get('x')
@@ -302,6 +306,8 @@ Base class for "group" objects
             @$rect
                 .attr('x', @position.get('x'))
                 .attr('y', @position.get('y'))
+                .attr('width',  @position.get('w'))
+                .attr('height', @position.get('h'))
             return @
 
         OnMouseEnter: (event) ->
@@ -323,6 +329,8 @@ Base class for "group" objects
                 @offset.x = @ox1 + x
                 @offset.y = @oy1 + y
 
+                newparentw = 0
+                newparenth = 0
                 boundsx = @parent.position.get('w') - @position.get('w') - 10
                 boundsy = @parent.position.get('h') - @position.get('h') - 10
 
@@ -330,19 +338,26 @@ Base class for "group" objects
                     @offset.x = 10
                     x = @parent.position.get('x') + 10
                 else if @offset.x > boundsx
-                    @offset.x = boundsx
-                    x = @parent.position.get('x') + boundsx
-                if @offset.y < 10
-                    @offset.y = 10
-                    y = @parent.position.get('y') + 10
+                    #@offset.x = boundsx
+                    #x = @parent.position.get('x') + boundsx
+                    newparentw = @offset.x - boundsx
+                    x = @offset.x #@parent.position.get('x') + boundsx
+                if @offset.y < 30
+                    @offset.y = 30
+                    y = @parent.position.get('y') + 30
                 else if @offset.y > boundsy
-                    @offset.y = boundsy
-                    y = @parent.position.get('y') + boundsy
+                    #@offset.y = boundsy
+                    #y = @parent.position.get('y') + boundsy
+                    newparenth = @offset.y - boundsy
+                    y = @offset.y #@parent.position.get('x') + boundsx
 
             @position.set 'x': x, 'y': y
+            if newparentw or newparenth
+                newparentw = @parent.position.get('w') + newparentw
+                newparenth = @parent.position.get('h') + newparenth
+                @parent.Size newparentw, newparenth
 
             return cancelEvent(event)
-
 
 
 Base class for "node" objects
