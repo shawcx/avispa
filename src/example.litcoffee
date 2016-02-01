@@ -3,14 +3,14 @@
         graph = new Graph
             el: $('#surface svg')
 
-        group = new ForemanGroup
+        group = new Group
             model:    new Backbone.Model(title:'Group 1')
             parent:   null
             position: new Backbone.Model
-                x: 30
+                x: -30
                 y: -50
-                w: 100
-                h: 100
+                w: 150
+                h: 150
 
         graph.$groups.append(group.$el)
 
@@ -18,8 +18,8 @@
             label:   'Node 1'
             parent:   group
             position: new Backbone.Model
-                x: 25
-                y: 45
+                x: 35
+                y: 55
                 radius: 30
                 fill: '#cfc'
 
@@ -29,18 +29,18 @@
             label:   'Node 2'
             parent:   group
             position: new Backbone.Model
-                x: 25
-                y: 45
+                x: 105
+                y: 85
                 radius: 30
                 fill: '#cfc'
 
         graph.$objects.append(n2.$el)
 
-        group = new ForemanGroup
+        group = new Group
             model:    new Backbone.Model(title:'Group 2')
             parent:   null
             position: new Backbone.Model
-                x: 40
+                x: 150
                 y: 60
                 w: 100
                 h: 100
@@ -73,7 +73,7 @@
         initialize: () ->
             super
 
-    class ForemanGroup extends Avispa.Group
+    class Group extends Avispa.Group
         initialize: () ->
             super
 
@@ -97,7 +97,6 @@
             return @
 
         OnMouseDown: (event) ->
-            $('.contextMenu').hide()
             super
 
 Push to the database the position that we stop dragging at.
