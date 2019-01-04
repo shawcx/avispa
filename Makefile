@@ -1,9 +1,6 @@
 
-# OS X Sublime Text 2 hack
-PATH := $(PATH):/usr/local/bin
-
-COFFEE = PATH=$(PATH) coffee
-LESS = PATH=$(PATH) lessc
+COFFEE = coffee
+LESS   = lessc
 
 AVISPA_JS_OUT = dist/avispa.js
 AVISPA_JS_SRC = src/avispa.litcoffee

@@ -71,11 +71,11 @@
 
     class Graph extends Avispa
         initialize: () ->
-            super
+            super()
 
     class Group extends Avispa.Group
         initialize: () ->
-            super
+            super()
 
             @$label = $SVG('text')
                 .attr('dx', '0.5em')
@@ -88,7 +88,7 @@
             return @
 
         render: () ->
-            super
+            super()
 
             @$label
                 .attr('x', @position.get('x'))
@@ -97,7 +97,7 @@
             return @
 
         OnMouseDown: (event) ->
-            super
+            super()
 
 Push to the database the position that we stop dragging at.
 

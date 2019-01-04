@@ -1,8 +1,5 @@
-    ###
-    (c) 2013-2014 Matthew Oertle <moertle@gmail.com>
-    http://github.com/moertle/avispa
-    ###
-
+(c) 2013-2014 Matthew Oertle <moertle@gmail.com>
+http://github.com/moertle/avispa
 
 A wrapper function to create jQuery SVG elements
 
@@ -293,7 +290,7 @@ Base class for "group" objects
         el: () -> $SVG('g').attr('class', 'group')
 
         initialize: () ->
-            super
+            super()
 
             @$rect = $SVG('rect')
                 .attr('width',  @position.get('w'))
@@ -367,7 +364,7 @@ Base class for "node" objects
         el: () -> $SVG('g').attr('class', 'node')
 
         initialize: () ->
-            super
+            super()
 
             @$circle = $SVG('circle')
                 .attr('r', @position.get('radius'))
