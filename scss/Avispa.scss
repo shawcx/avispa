@@ -1,5 +1,5 @@
 
-@mono: "Andale Mono", AndaleMono, monospace;
+$mono: "Andale Mono", AndaleMono, monospace;
 
 g.group {
     //TODO: elements .user-select();
@@ -19,7 +19,7 @@ g.group {
 
     text {
         cursor: pointer;
-        font: bold 8pt @mono;
+        font: bold 8pt $mono;
         fill: #000;
         text-anchor: left;
     }
@@ -40,7 +40,7 @@ g.node {
 
     text {
         cursor: pointer;
-        font: bold 8pt @mono;
+        font: bold 8pt $mono;
         fill: #000;
         text-anchor: middle;
     }
@@ -65,7 +65,7 @@ g.link {
     }
 
     text {
-        font: bold 6pt @mono;
+        font: bold 6pt $mono;
         fill: #666;
         cursor: pointer;
         text-anchor: middle;

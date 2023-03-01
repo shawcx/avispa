@@ -1,0 +1,29 @@
+{
+  "name": "@shawcx/avispa",
+  "version": "1.0.0",
+  "description": "SVG + Websockets",
+  "main": "js/Avispa.js",
+  "sass": "scss/Avispa.scss",
+  "style": "css/Avispa.css",
+  "scripts": {
+    "build": "npx sass scss/Avispa.scss css/Avispa.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shawcx/avispa.git"
+  },
+  "author": "Matthew Shaw",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shawcx/avispa/issues"
+  },
+  "homepage": "https://github.com/shawcx/avispa#readme",
+  "dependencies": {
+    "backbone": "^1.4.1",
+    "jquery": "^3.6.3",
+    "underscore": "^1.13.6"
+  },
+  "devDependencies": {
+    "sass": "^1.58.2"
+  }
+}
