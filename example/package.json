@@ -1,17 +1,20 @@
 {
-  "name": "test",
+  "name": "avispa-example",
   "version": "1.0.0",
   "description": "Avispa Example",
+  "private": true,
   "main": "example.js",
   "scripts": {
-    "build-js": "npx browserify src/example.js -o example.js",
-    "build-css": "npx sass -I ./node_modules/@shawcx/avispa/scss src/example.scss example.css",
-    "host": "python3 -m http.server"
+    "build:js": "browserify src/example.js -o example.js",
+    "build:css": "sass --no-source-map -I ../scss src/example.scss example.css",
+    "build": "npm run build:js && npm run build:css",
+    "serve": "python3 -m http.server 8000",
+    "start": "npm run build && ( ( sleep 1 && open 'http://localhost:8000/example.html' ) & python3 -m http.server 8000 )"
   },
   "author": "Matthew Shaw",
   "license": "ISC",
   "dependencies": {
-    "@shawcx/avispa": "file:../shawcx-avispa-1.0.0.tgz"
+    "@shawcx/avispa": "file:.."
   },
   "devDependencies": {
     "browserify": "^17.0.0",

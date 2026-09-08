@@ -3,29 +3,14 @@
 const _        = require('underscore')
 const Backbone = require('backbone')
 
-const { Position }          = require('./Types.js')
-const { cancelEvent, $SVG } = require('./Utils.js')
+const { Position }                     = require('./Types.js')
+const { cancelEvent, $SVG, normalizeWheel } = require('./Utils.js')
 
 const context      = require('./Context.js')
 const Group        = require('./Group.js')
 const Node         = require('./Node.js')
 const Link         = require('./Link.js')
-
-let normalizeWheel = function(event) {
-    if (event.wheelDelta) {
-        return event.wheelDelta / 120
-    }
-    if (event.detail) {
-        return event.detail / -3
-    }
-    return 0
-}
-
-
-const $SVG = function(name) {
-    return $(document.createElementNS('http://www.w3.org/2000/svg', name))
-}
-
+const Socket       = require('./Socket.js')
 
 class Avispa extends Backbone.View {
     events() {
@@ -76,6 +61,28 @@ class Avispa extends Backbone.View {
         this.$pan.y = parseInt(window.innerHeight / 2)
 
         this.Pan(0,0)
+
+        // opt-in WebSocket transport: `socket` may be a path string or a
+        // Socket options object. Incoming messages are routed to OnMessage
+        // unless the caller supplies its own onmessage handler.
+        if (options && options.socket) {
+            let socketOptions = (typeof options.socket === 'string')
+                ? { path: options.socket }
+                : Object.assign({}, options.socket)
+
+            if (!socketOptions.onmessage) {
+                socketOptions.onmessage = (msg) => this.OnMessage(msg)
+            }
+
+            this.socket = new Socket(socketOptions)
+        }
+    }
+
+    remove() {
+        if (this.socket) {
+            this.socket.close()
+        }
+        return super.remove()
     }
 
     Pan(dx, dy) {
@@ -219,6 +226,7 @@ class Avispa extends Backbone.View {
     MiddleClick(event) {}
     RightClick(event) {}
     OnContextMenu(event) {}
+    OnMessage(msg) {}
 }
 
 exports.Avispa      = Avispa
@@ -226,5 +234,6 @@ exports.Position    = Position
 exports.Group       = Group
 exports.Node        = Node
 exports.Link        = Link
+exports.Socket      = Socket
 exports.$SVG        = $SVG
 exports.cancelEvent = cancelEvent

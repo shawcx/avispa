@@ -79,11 +79,11 @@ class Link extends Backbone.View {
         let mx = xc - (arc>>1) * Math.cos(ang)
         let my = yc + (arc>>1) * Math.sin(ang)
 
-        let rot = -(this.RAD * ang)
+        let rot = -(Link.RAD * ang)
         rot += (rot > 0 && rot < 180) ? -90 : 90
 
-        this.path.attr('d', "M #{lx} #{ly} Q #{xc} #{yc} #{rx} #{ry}")
-        //this.label.attr('x', mx).attr('y', my).attr('transform', "rotate(#{rot}, #{mx} #{my})")
+        this.path.attr('d', `M ${lx} ${ly} Q ${xc} ${yc} ${rx} ${ry}`)
+        //this.label.attr('x', mx).attr('y', my).attr('transform', `rotate(${rot}, ${mx} ${my})`)
 
         return this
     }

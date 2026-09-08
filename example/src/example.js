@@ -5,8 +5,6 @@ const _        = require('underscore')
 const Backbone = require('backbone')
 
 const Avispa   = require('@shawcx/avispa')
-const Avispa2  = require('@shawcx/avispa/js/Types.js')
-console.log(Avispa2)
 
 $(document).ready(function() {
     let graph = new Graph({
@@ -23,8 +21,6 @@ $(document).ready(function() {
             h: 150,
         })
     })
-
-    console.log(Avispa)
 
     graph.$groups.append(group.$el)
 
