@@ -17,6 +17,12 @@ g.group {
         stroke-width: 2px;
     }
 
+    rect.handle {
+        cursor: nwse-resize;
+        fill: #999;
+        stroke: none;
+    }
+
     text {
         cursor: pointer;
         font: bold 10pt $mono;

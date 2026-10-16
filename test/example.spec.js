@@ -35,6 +35,7 @@ function state(page) {
             const r = g.querySelector('rect')
             groups[g.querySelector('text').textContent] = {
                 x: num(r, 'x'), y: num(r, 'y'), w: num(r, 'width'), h: num(r, 'height'), shown: shown(g),
+                handle: shown(g.querySelector('rect.handle')),
             }
         }
 
@@ -76,17 +77,21 @@ function toPage(page, x, y) {
     }, [x, y])
 }
 
-// a page point on a group's title that nothing is drawn over
-function titlePoint(page, title) {
-    return page.evaluate(title => {
-        const text = [...document.querySelectorAll('g.group text')].find(t => t.textContent === title)
-        const box  = text.getBoundingClientRect()
-        for (let f = 0.1; f < 1; f += 0.1) {
-            const [x, y] = [box.x + box.width * f, box.y + box.height / 2]
-            if (document.elementFromPoint(x, y) === text) return [x, y]
+// a page point on part of a group (its title 'text', or its 'rect.handle')
+// that nothing else is drawn over
+function groupPoint(page, title, part) {
+    return page.evaluate(([title, part]) => {
+        const group = [...document.querySelectorAll('g.group')].find(g => g.querySelector('text').textContent === title)
+        const el    = group.querySelector(part)
+        const box   = el.getBoundingClientRect()
+        for (const fy of [0.5, 0.3, 0.7]) {
+            for (let fx = 0.1; fx < 1; fx += 0.1) {
+                const [x, y] = [box.x + box.width * fx, box.y + box.height * fy]
+                if (document.elementFromPoint(x, y) === el) return [x, y]
+            }
         }
-        throw new Error(`the ${title} title is covered`)
-    }, title)
+        throw new Error(`the ${part} of ${title} is covered`)
+    }, [title, part])
 }
 
 // a page point on a link's path that nothing is drawn over
@@ -136,8 +141,8 @@ test('every item is drawn in place on load', async ({ page }) => {
 
     // groups render without the host calling render(), and children sit at
     // their offset from the parent, a nested group's included
-    expect(s.groups['Group 1']).toEqual({ x: -30, y: -50, w: 150, h: 150, shown: true })
-    expect(s.groups['Group 3']).toEqual({ x: 240, y: 100, w: 90,  h: 90,  shown: true })
+    expect(s.groups['Group 1']).toEqual({ x: -30, y: -50, w: 150, h: 150, shown: true, handle: true })
+    expect(s.groups['Group 3']).toEqual({ x: 240, y: 100, w: 90,  h: 90,  shown: true, handle: true })
     expect(s.nodes['Node 4']).toEqual({ x: 285, y: 155, shown: true })
     expect(s.links.every(l => l.shown)).toBe(true)
 })
@@ -264,14 +269,52 @@ test('dragging a nested group past its parent\'s edge grows the parent', async (
     expect(t.nodes['Node 4'].y - s.nodes['Node 4'].y).toBeCloseTo(moved.y - g3.y, 5)
 })
 
+test('a group\'s corner handle resizes it, but no smaller than its contents', async ({ page }) => {
+    const s  = await state(page)
+    const g1 = s.groups['Group 1']
+
+    // larger (down more than right, so the corner stays clear of Node 3):
+    // the group's own position and its nodes stay put
+    let at = await groupPoint(page, 'Group 1', 'rect.handle')
+    await drag(page, at, [at[0] + 20, at[1] + 40])
+    let t = await state(page)
+    expectAt(t.groups['Group 1'], g1.x, g1.y)
+    expect(t.groups['Group 1'].w).toBeCloseTo(g1.w + 20, 3)
+    expect(t.groups['Group 1'].h).toBeCloseTo(g1.h + 40, 3)
+    expect(t.nodes).toEqual(s.nodes)
+
+    // far smaller: stops where Node 2 (offset 105,85, radius 30) still fits
+    at = await groupPoint(page, 'Group 1', 'rect.handle')
+    await drag(page, at, [at[0] - 150, at[1] - 150])
+    t = await state(page)
+    expect(t.groups['Group 1']).toMatchObject({ w: 135, h: 115 })
+})
+
+test('resizing a nested group grows its parent, which then can\'t shrink below it', async ({ page }) => {
+    // Group 3 sits at offset (90, 40) in Group 2 and keeps a 10px margin
+    let at = await groupPoint(page, 'Group 3', 'rect.handle')
+    await drag(page, at, [at[0] + 100, at[1] + 80])
+    let t = await state(page)
+    expect(t.groups['Group 3'].w).toBeCloseTo(190, 3)
+    expect(t.groups['Group 3'].h).toBeCloseTo(170, 3)
+    expect(t.groups['Group 2'].w).toBeCloseTo(90 + 190 + 10, 3)
+    expect(t.groups['Group 2'].h).toBeCloseTo(40 + 170 + 10, 3)
+
+    at = await groupPoint(page, 'Group 2', 'rect.handle')
+    await drag(page, at, [at[0] - 200, at[1] - 200])
+    t = await state(page)
+    expect(t.groups['Group 2'].w).toBeCloseTo(90 + 190 + 10, 3)
+    expect(t.groups['Group 2'].h).toBeCloseTo(40 + 170 + 10, 3)
+})
+
 test('double-clicking a title collapses and expands groups, nested ones included', async ({ page }) => {
-    const toggle = async title => page.mouse.dblclick(...await titlePoint(page, title))
+    const toggle = async title => page.mouse.dblclick(...await groupPoint(page, title, 'text'))
     const s = await state(page)
 
     // the nested group: its node hides and links to it attach to its bar
     await toggle('Group 3')
     let t = await state(page)
-    expect(t.groups['Group 3']).toMatchObject({ h: 30, shown: true })
+    expect(t.groups['Group 3']).toMatchObject({ h: 30, shown: true, handle: false })
     expect(t.nodes['Node 4'].shown).toBe(false)
     for (const i of [N2_N4, N3_N4]) {
         expect(t.links[i].end).not.toEqual(s.links[i].end)

@@ -13,8 +13,18 @@ class Group extends BaseObject {
     // clear at the top in Drag
     static COLLAPSED_HEIGHT = 30
 
+    // the resize handle in the bottom-right corner, and the smallest a group gets
+    static HANDLE   = 10
+    static MIN_SIZE = 40
+
     el() {
         return $SVG('g').attr('class', 'group')
+    }
+
+    events() {
+        return Object.assign(super.events(), {
+            'pointerdown rect.handle' : 'OnHandleDown',
+            })
     }
 
     initialize(options) {
@@ -24,17 +34,35 @@ class Group extends BaseObject {
             .css('fill', options.position.get('fill'))
             .appendTo(this.$el)
 
+        this.$handle = $SVG('rect')
+            .attr('class',  'handle')
+            .attr('width',  Group.HANDLE)
+            .attr('height', Group.HANDLE)
+            .appendTo(this.$el)
+
         super.initialize(options)
 
         this.position.bind('change:collapsed', this.UpdateVisibility, this)
     }
 
     render() {
+        let x = this.position.get('x')
+        let y = this.position.get('y')
+        let w = this.position.get('w')
+        let h = this.Height()
+
         this.$rect
-            .attr('width',  this.position.get('w'))
-            .attr('height', this.Height())
-            .attr('x',      this.position.get('x'))
-            .attr('y',      this.position.get('y'))
+            .attr('width',  w)
+            .attr('height', h)
+            .attr('x',      x)
+            .attr('y',      y)
+
+        // no resizing while collapsed
+        this.$handle
+            .attr('x', x + w - Group.HANDLE)
+            .attr('y', y + h - Group.HANDLE)
+            .css('display', this.position.get('collapsed') ? 'none' : '')
+
         return this
     }
 
@@ -56,6 +84,61 @@ class Group extends BaseObject {
     ToggleCollapse() {
         this.position.set({collapsed: !this.position.get('collapsed')})
         return this
+    }
+
+    // set the size, but no smaller than the group's contents, and grow the
+    // parent group if this one no longer fits inside it
+    Resize(w, h) {
+        let [minw, minh] = this.MinSize()
+        this.Size(Math.max(w, minw), Math.max(h, minh))
+
+        if (this.parent) {
+            let [pw, ph] = this.Extent()
+            this.parent.Resize(
+                Math.max(this.parent.position.get('w'), pw),
+                Math.max(this.parent.position.get('h'), ph))
+        }
+        return this
+    }
+
+    // the smallest size that still holds every child
+    MinSize() {
+        let w = Group.MIN_SIZE
+        let h = Group.MIN_SIZE
+        for (const child of this.children) {
+            let [cw, ch] = child.Extent()
+            w = Math.max(w, cw)
+            h = Math.max(h, ch)
+        }
+        return [w, h]
+    }
+
+    // the room this group needs inside its parent, keeping the 10px margin of Drag
+    Extent() {
+        return [
+            this.offset.x + this.position.get('w') + 10,
+            this.offset.y + this.Height() + 10,
+            ]
+    }
+
+    // dragging the handle resizes the group, through a drag item of its own so
+    // the group's click hooks don't fire for it
+    OnHandleDown(event) {
+        let start = {
+            x: event.clientX,
+            y: event.clientY,
+            w: this.position.get('w'),
+            h: this.position.get('h'),
+            }
+
+        context.a.dragItem = {
+            jitter: 0,
+            Drag: (event) => this.Resize(
+                start.w + (event.clientX - start.x) / context.a.scale,
+                start.h + (event.clientY - start.y) / context.a.scale),
+            }
+
+        return cancelEvent(event)
     }
 
     OnMouseEnter(event) {

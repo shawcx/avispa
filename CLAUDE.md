@@ -108,6 +108,12 @@ g.pan > g.zoom > { g.groups, g.links, g.objects, g.labels }
   `Group.COLLAPSED_HEIGHT` (`h` keeps the expanded height), and descendants are hidden
   via `BaseObject.children` / `UpdateVisibility()`. The library has no title label;
   the example's `Group` subclass adds one and toggles collapse on its `dblclick`.
+  A `rect.handle` in the bottom-right corner (hidden while collapsed) resizes the
+  group: `OnHandleDown` installs a plain `{jitter, Drag}` object as
+  `context.a.dragItem` (so the group's click hooks don't fire), whose `Drag` calls
+  `Resize(w, h)`. `Resize` clamps to `MinSize()` — the largest child `Extent()` (a
+  node's center plus its `radius`; a nested group's size plus the 10px margin) and
+  `Group.MIN_SIZE` — then grows the parent through its own `Resize` if needed.
 - **`Link`** (`js/Link.js`) — extends `Backbone.View` directly (not `BaseObject`). An
   SVG `path` (quadratic bézier) between two nodes; re-renders when *either* endpoint's
   `position` changes. Draggable to bend the curve — the bend amount is an `arc` value

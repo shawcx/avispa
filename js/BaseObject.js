@@ -65,6 +65,11 @@ class BaseObject extends Backbone.View {
         return collapsed
     }
 
+    // how far this item reaches into its parent group, from the parent's top-left
+    Extent() {
+        return [this.offset.x, this.offset.y]
+    }
+
     // hide everything inside a collapsed group, and show it again on expand
     UpdateVisibility() {
         for (const child of this.children) {

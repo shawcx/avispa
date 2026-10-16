@@ -9,6 +9,11 @@ g.group rect.hover {
   stroke: #333;
   stroke-width: 2px;
 }
+g.group rect.handle {
+  cursor: nwse-resize;
+  fill: #999;
+  stroke: none;
+}
 g.group text {
   cursor: pointer;
   font: bold 10pt "Andale Mono", AndaleMono, monospace;

@@ -39,6 +39,12 @@ class Node extends BaseObject {
         return this
     }
 
+    // the whole circle, not just its center, belongs inside the parent group
+    Extent() {
+        let r = this.position.get('radius') || 0
+        return [this.offset.x + r, this.offset.y + r]
+    }
+
     OnMouseEnter(event) {
         if (!context.a.dragItem) {
             this.$circle.attr('class', 'hover')
