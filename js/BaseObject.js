@@ -41,7 +41,7 @@ class BaseObject extends Backbone.View {
         }
     }
 
-    size(w,h) {
+    Size(w,h) {
         this.position.set({w:w,h:h})
         return this
     }

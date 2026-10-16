@@ -103,9 +103,8 @@ class Avispa extends Backbone.View {
 
     Zoom(delta) {
         let scale = (delta == 0) ? 1.0 : this.scale + delta * this.zoom.step
-        if (scale >= this.zoom.min || scale <= this.zoom.max) {
-            this.Scale(scale)
-        }
+        scale = Math.min(this.zoom.max, Math.max(this.zoom.min, scale))
+        this.Scale(scale)
         return this
     }
 
@@ -181,20 +180,21 @@ class Avispa extends Backbone.View {
         this.offset = null
 
         if (this.dragItem) {
+            // click hooks are optional on drag items (Link has no Middle/RightClick)
             if (this.dragItem.jitter < 3) {
                 switch (event.which) {
                     case 1:
-                        this.dragItem.LeftClick(event)
+                        if (this.dragItem.LeftClick) this.dragItem.LeftClick(event)
                         break
                     case 2:
-                        this.dragItem.MiddleClick(event)
+                        if (this.dragItem.MiddleClick) this.dragItem.MiddleClick(event)
                         break
                     case 3:
-                        this.dragItem.RightClick(event)
+                        if (this.dragItem.RightClick) this.dragItem.RightClick(event)
                         break
                 }
             }
-            else if(this.dragItem.MouseUp) {
+            if (this.dragItem.MouseUp) {
                 this.dragItem.MouseUp(event)
             }
             this.dragItem = null

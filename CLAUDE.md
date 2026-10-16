@@ -122,6 +122,14 @@ treat runtime behavior as unverified. Fixed so far:
   removed in favor of the `Utils.js` versions.
 - `Link.render` now builds its `d` attribute with a real template literal, and uses
   `Link.RAD` (was `this.RAD`, which is `undefined` on an instance for a static field).
+- Port regressions vs. the CoffeeScript original (`git show 8e00f81:src/avispa.litcoffee`):
+  `normalizeWheel` reads `event.originalEvent` (jQuery 3 dropped `event.props.push`, so
+  `wheelDelta` was missing and every wheel tick reset zoom); `Zoom` clamps to
+  `zoom.min`/`zoom.max`; `Link.Drag` sign/precedence fixed; `BaseObject.size` →
+  `Size` (called by `Group.Drag`); `OnMouseUp` guards optional click hooks and always
+  calls `MouseUp`, as the original did.
+- Still open: nothing creates `this.arrow` (new-link drawing is unimplemented), and a
+  plain `Group` doesn't render until its position first changes.
 - `js/Socket.js` was hardened while being integrated: added the pre-open send queue,
   guarded `JSON.parse` / `'pong'` handling, `close()`, capped-and-persistent reconnect
   backoff (previously it gave up permanently once backoff passed `maxtime`), and

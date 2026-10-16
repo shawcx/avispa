@@ -101,7 +101,7 @@ class Link extends Backbone.View {
         let d = (to_x - from_x) * (y - from_y) - (to_y - from_y) * (x - from_x)
 
         if (d) {
-            d = Math.pow(Math.abs(d), 0.5) * (d > 0) ? -1 : 1
+            d = Math.pow(Math.abs(d), 0.5) * ((d > 0) ? -1 : 1)
         }
 
         if (!this.od && this.od != 0) {
@@ -123,7 +123,7 @@ class Link extends Backbone.View {
     }
 
     MouseUp(event) {
-        if (this.jitter > 3) {
+        if (this.jitter >= 3) {
             this.path.css('stroke-width', '3px')
         }
     }

@@ -13,6 +13,8 @@ exports.$SVG = function(name) {
 }
 
 exports.normalizeWheel = function(event) {
+    // jQuery 3 events don't copy wheelDelta; read it from the native event
+    event = event.originalEvent || event
     if (event.wheelDelta) return event.wheelDelta / 120
     if (event.detail)     return event.detail     /  -3
     return 0
