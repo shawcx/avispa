@@ -9,6 +9,10 @@ const BaseObject            = require('./BaseObject.js')
 
 
 class Group extends BaseObject {
+    // a collapsed group shrinks to its title bar: the 30px a child group keeps
+    // clear at the top in Drag
+    static COLLAPSED_HEIGHT = 30
+
     el() {
         return $SVG('g').attr('class', 'group')
     }
@@ -21,14 +25,36 @@ class Group extends BaseObject {
             .appendTo(this.$el)
 
         super.initialize(options)
+
+        this.position.bind('change:collapsed', this.UpdateVisibility, this)
     }
 
     render() {
         this.$rect
             .attr('width',  this.position.get('w'))
-            .attr('height', this.position.get('h'))
+            .attr('height', this.Height())
             .attr('x',      this.position.get('x'))
             .attr('y',      this.position.get('y'))
+        return this
+    }
+
+    // drawn height; `h` keeps the expanded height while collapsed
+    Height() {
+        return this.position.get('collapsed') ? Group.COLLAPSED_HEIGHT : this.position.get('h')
+    }
+
+    Collapse() {
+        this.position.set({collapsed: true})
+        return this
+    }
+
+    Expand() {
+        this.position.set({collapsed: false})
+        return this
+    }
+
+    ToggleCollapse() {
+        this.position.set({collapsed: !this.position.get('collapsed')})
         return this
     }
 
@@ -58,7 +84,7 @@ class Group extends BaseObject {
             this.offset.y = this.oy1 + y
 
             let boundsx = this.parent.position.get('w') - this.position.get('w') - 10
-            let boundsy = this.parent.position.get('h') - this.position.get('h') - 10
+            let boundsy = this.parent.position.get('h') - this.Height() - 10
 
             if (this.offset.x < 10) {
                 this.offset.x = 10

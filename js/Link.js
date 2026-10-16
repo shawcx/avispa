@@ -39,6 +39,13 @@ class Link extends Backbone.View {
         this.left.position.bind('change', this.render, this)
         this.right.position.bind('change', this.render, this)
 
+        // re-render when a group around either end collapses or expands
+        for (const end of [this.left, this.right]) {
+            for (let p = end.parent; p; p = p.parent) {
+                p.position.bind('change:collapsed', this.render, this)
+            }
+        }
+
         this.render()
 
         if (options.parent) {
@@ -51,14 +58,49 @@ class Link extends Backbone.View {
         return
     }
 
+    // the items the ends attach to: an end hidden inside a collapsed group
+    // attaches to that group instead
+    Ends() {
+        return [
+            this.left.CollapsedAncestor()  || this.left,
+            this.right.CollapsedAncestor() || this.right,
+            ]
+    }
+
+    // the point a link aims at: a node's center, or the middle of a collapsed group
+    static Center(item) {
+        let p = item.position
+        if (p.get('collapsed')) {
+            return [p.get('x') + p.get('w') / 2, p.get('y') + item.Height() / 2]
+        }
+        return [p.get('x'), p.get('y')]
+    }
+
+    // distance from Center(item) to the item's edge along the unit vector (ux, uy)
+    static Edge(item, ux, uy) {
+        if (!item.position.get('collapsed')) {
+            return 30
+        }
+        return Math.min(
+            item.position.get('w') / 2 / Math.abs(ux),
+            item.Height()          / 2 / Math.abs(uy))
+    }
+
     render() {
         if (!this.arc) { return this }
 
+        let [left, right] = this.Ends()
+
+        // both ends are hidden inside the same collapsed group
+        if (left === right) {
+            this.$el.css('display', 'none')
+            return this
+        }
+        this.$el.css('display', '')
+
         let arc = this.arc.get('arc')
-        let lx = this.left.position.get('x')
-        let ly = this.left.position.get('y')
-        let rx = this.right.position.get('x')
-        let ry = this.right.position.get('y')
+        let [lx, ly] = Link.Center(left)
+        let [rx, ry] = Link.Center(right)
 
         // calculate the angle between 2 nodes
         let ang = Math.atan2(rx - lx, ry - ly)
@@ -66,11 +108,15 @@ class Link extends Backbone.View {
         // bound the offset to about half the circle
         let offset = Math.max(-1.5, Math.min(1.5, arc / 100))
 
-        // draw to the edge of the node
-        lx +=  30 * Math.sin(ang + offset)
-        ly +=  30 * Math.cos(ang + offset)
-        rx += -33 * Math.sin(ang - offset)
-        ry += -33 * Math.cos(ang - offset)
+        // draw to the edge of each end, leaving room for the arrowhead
+        let la = ang + offset
+        let ra = ang - offset
+        let ld = Link.Edge(left,  Math.sin(la), Math.cos(la))
+        let rd = Link.Edge(right, Math.sin(ra), Math.cos(ra)) + 3
+        lx += ld * Math.sin(la)
+        ly += ld * Math.cos(la)
+        rx -= rd * Math.sin(ra)
+        ry -= rd * Math.cos(ra)
 
         // calculate the the position for the quadratic bezier curve
         let xc = ((lx + rx) >> 1) + arc * Math.cos(ang)
@@ -93,10 +139,9 @@ class Link extends Backbone.View {
     Drag(event) {
         let [x,y] = context.a.Point(event)
 
-        let from_x = this.left.position.get('x')
-        let from_y = this.left.position.get('y')
-        let to_x   = this.right.position.get('x')
-        let to_y   = this.right.position.get('y')
+        let [left, right]    = this.Ends()
+        let [from_x, from_y] = Link.Center(left)
+        let [to_x, to_y]     = Link.Center(right)
 
         let d = (to_x - from_x) * (y - from_y) - (to_y - from_y) * (x - from_x)
 

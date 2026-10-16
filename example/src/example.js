@@ -69,7 +69,7 @@ $(document).ready(function() {
         parent:   group,
         position: new Avispa.Position({
             x: 25,
-            y: 45,
+            y: 60,
             radius: 30,
         })
     })
@@ -96,6 +96,12 @@ class Graph extends Avispa.Avispa {
 }
 
 class Group extends Avispa.Group {
+    events() {
+        return Object.assign(super.events(), {
+            'dblclick text' : 'OnTitleDoubleClick',
+            })
+    }
+
     initialize(options) {
         super.initialize(options)
 
@@ -118,6 +124,11 @@ class Group extends Avispa.Group {
 
     OnMouseDown(event) {
         super.OnMouseDown(event)
+    }
+
+    OnTitleDoubleClick(event) {
+        this.ToggleCollapse()
+        return Avispa.cancelEvent(event)
     }
 
     OnContextMenu(event) {

@@ -11,7 +11,7 @@ g.group rect.hover {
 }
 g.group text {
   cursor: pointer;
-  font: bold 8pt "Andale Mono", AndaleMono, monospace;
+  font: bold 10pt "Andale Mono", AndaleMono, monospace;
   fill: #000;
   text-anchor: left;
 }

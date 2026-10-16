@@ -80,10 +80,17 @@ g.pan > g.zoom > { g.groups, g.links, g.objects, g.labels }
   node inside the parent group's bounds.
 - **`Group`** (`js/Group.js`) — `rect` + label in a `g.group`. Its `Drag` can *grow*
   the parent's size when a child is dragged past the edge (`parent.Size(w, h)`).
+  Collapsing is driven by a `collapsed` attribute on the group's `Position`
+  (`Collapse()` / `Expand()` / `ToggleCollapse()` just set it): the rect shrinks to
+  `Group.COLLAPSED_HEIGHT` (`h` keeps the expanded height), and descendants are hidden
+  via `BaseObject.children` / `UpdateVisibility()`. The library has no title label;
+  the example's `Group` subclass adds one and toggles collapse on its `dblclick`.
 - **`Link`** (`js/Link.js`) — extends `Backbone.View` directly (not `BaseObject`). An
   SVG `path` (quadratic bézier) between two nodes; re-renders when *either* endpoint's
   `position` changes. Draggable to bend the curve — the bend amount is an `arc` value
-  held in its own `Backbone.Model`, and shift-left-click resets it to 0.
+  held in its own `Backbone.Model`, and shift-left-click resets it to 0. An end hidden
+  inside a collapsed group attaches to the outermost collapsed group instead (`Ends()`,
+  `Link.Center`, `Link.Edge`); a link with both ends in the same collapsed group hides.
 
 ### WebSocket transport (`js/Socket.js`)
 

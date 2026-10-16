@@ -26,18 +26,40 @@ class BaseObject extends Backbone.View {
         _.bindAll(this, 'OnMouseDown', 'OnMouseUp', 'OnContextMenu', 'render')
 
         this.parent   = options.parent
+        this.children = []
         this.position = options.position
         if (this.position) {
             this.position.bind('change', this.render, this)
         }
 
         if (this.parent) {
+            this.parent.children.push(this)
             this.offset = {
                 x: this.position.get('x'),
                 y: this.position.get('y'),
                 }
             this.ParentDrag(this.parent.position)
             this.parent.position.bind('change', this.ParentDrag, this)
+            this.$el.css('display', this.CollapsedAncestor() ? 'none' : '')
+        }
+    }
+
+    // the outermost collapsed group containing this item, or null if it is on screen
+    CollapsedAncestor() {
+        let collapsed = null
+        for (let p = this.parent; p; p = p.parent) {
+            if (p.position.get('collapsed')) {
+                collapsed = p
+            }
+        }
+        return collapsed
+    }
+
+    // hide everything inside a collapsed group, and show it again on expand
+    UpdateVisibility() {
+        for (const child of this.children) {
+            child.$el.css('display', child.CollapsedAncestor() ? 'none' : '')
+            child.UpdateVisibility()
         }
     }
 
