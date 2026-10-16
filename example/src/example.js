@@ -56,8 +56,8 @@ $(document).ready(function() {
         position: new Avispa.Position({
             x: 150,
             y: 60,
-            w: 100,
-            h: 100,
+            w: 200,
+            h: 150,
             fill: '#fcc',
         })
     })
@@ -76,6 +76,33 @@ $(document).ready(function() {
 
     graph.$objects.append(n3.$el)
 
+    // a group nested inside Group 2
+    let nested = new Group({
+        model:    new Backbone.Model({title:'Group 3'}),
+        parent:   group,
+        position: new Avispa.Position({
+            x: 90,
+            y: 40,
+            w: 90,
+            h: 90,
+            fill: '#ccf',
+        })
+    })
+
+    graph.$groups.append(nested.$el)
+
+    let n4 = new Avispa.Node({
+        label:   'Node 4',
+        parent:   nested,
+        position: new Avispa.Position({
+            x: 45,
+            y: 55,
+            radius: 30,
+        })
+    })
+
+    graph.$objects.append(n4.$el)
+
     let link1 = new Avispa.Link({
         parent: graph,
         left:   n1,
@@ -86,6 +113,18 @@ $(document).ready(function() {
         parent: graph,
         left:   n3,
         right:  n2,
+    })
+
+    let link3 = new Avispa.Link({
+        parent: graph,
+        left:   n2,
+        right:  n4,
+    })
+
+    let link4 = new Avispa.Link({
+        parent: graph,
+        left:   n3,
+        right:  n4,
     })
 })
 

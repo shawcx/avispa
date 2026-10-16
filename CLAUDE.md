@@ -63,8 +63,9 @@ g.pan > g.zoom > { g.groups, g.links, g.objects, g.labels }
 - **Pan** (`Pan`), **zoom/scale** (`Scale`, `Zoom`), middle-click recenter.
 - A **global mouse state machine**: `OnMouseDown/Move/Up` dispatch by `event.which`
   (1/2/3). Drag routing is by mutually exclusive state fields — `this.offset` (panning
-  the whole scene), `this.arrow` (drawing a new link), `this.dragItem` (an item is
-  being dragged). A drag with < 3 `jitter` moves is treated as a click and dispatched
+  the whole scene), `this.arrow` (a link being drawn: a host hook — the host sets it
+  to any object with `Drag(event)` and `Remove()`; the library never creates one),
+  `this.dragItem` (an item is being dragged). A drag with < 3 `jitter` moves is treated as a click and dispatched
   to the item's `LeftClick`/`MiddleClick`/`RightClick`.
 - The `#Arrow` SVG marker referenced by links must be defined in the host's `<defs>`
   (again, see `example/example.html`).
@@ -75,7 +76,9 @@ g.pan > g.zoom > { g.groups, g.links, g.objects, g.labels }
   model, re-renders on its `change`. Parent/child: a child stores an `offset` relative
   to its parent and follows `parent.position` `change` via `ParentDrag`. `OnMouseDown`
   sets `context.a.dragItem = this`; `Drag` converts client coords through
-  `context.a.scale` and writes back to `position`.
+  `context.a.scale` and writes back to `position`. `initialize` binds `render` only
+  after the initial `ParentDrag` (a subclass is still building its elements then), so
+  each subclass calls `render()` at the end of its own `initialize`.
 - **`Node`** (`js/Node.js`) — `circle` + `text` in a `g.node`. Its `Drag` clamps the
   node inside the parent group's bounds.
 - **`Group`** (`js/Group.js`) — `rect` + label in a `g.group`. Its `Drag` can *grow*
@@ -120,9 +123,10 @@ layer (`graph.$groups`, `graph.$objects`, etc.). `Avispa.js` re-exports `Positio
 
 ## Known state / gotchas
 
-The `js/` sources are a partial, in-progress port from a single CoffeeScript file
-(see history around `098abd1`). The port has not been run end-to-end in a browser, so
-treat runtime behavior as unverified. Fixed so far:
+The `js/` sources are a port from a single CoffeeScript file (see history around
+`098abd1`). The example has been exercised by hand in Chrome — pan, wheel zoom,
+node/group drag, link bending, nested-group growth, and collapse — but there are no
+automated tests. Fixed so far:
 
 - `js/Utils.js` now exports `$SVG` (used by `Node`, `Group`, `Link`, and re-exported
   by `Avispa.js`); the dead local `$SVG`/`normalizeWheel` copies in `Avispa.js` were
@@ -135,8 +139,12 @@ treat runtime behavior as unverified. Fixed so far:
   `zoom.min`/`zoom.max`; `Link.Drag` sign/precedence fixed; `BaseObject.size` →
   `Size` (called by `Group.Drag`); `OnMouseUp` guards optional click hooks and always
   calls `MouseUp`, as the original did.
-- Still open: nothing creates `this.arrow` (new-link drawing is unimplemented), and a
-  plain `Group` doesn't render until its position first changes.
+- `BaseObject.initialize` used to bind `render` before the initial `ParentDrag`, so
+  any nested subclass rendered before its own elements existed (the example's nested
+  `Group` crashed on its missing `$label`).
+- Still open: a plain library `Group` never calls `render()` from `initialize`, so it
+  isn't drawn in place until its position first changes. `this.arrow` is not missing
+  port work — the CoffeeScript original never set it either.
 - `js/Socket.js` was hardened while being integrated: added the pre-open send queue,
   guarded `JSON.parse` / `'pong'` handling, `close()`, capped-and-persistent reconnect
   backoff (previously it gave up permanently once backoff passed `maxtime`), and

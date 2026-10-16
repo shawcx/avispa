@@ -28,9 +28,6 @@ class BaseObject extends Backbone.View {
         this.parent   = options.parent
         this.children = []
         this.position = options.position
-        if (this.position) {
-            this.position.bind('change', this.render, this)
-        }
 
         if (this.parent) {
             this.parent.children.push(this)
@@ -41,6 +38,12 @@ class BaseObject extends Backbone.View {
             this.ParentDrag(this.parent.position)
             this.parent.position.bind('change', this.ParentDrag, this)
             this.$el.css('display', this.CollapsedAncestor() ? 'none' : '')
+        }
+
+        // bound after the initial ParentDrag: a subclass is still building its
+        // elements here, and renders itself once its own initialize is done
+        if (this.position) {
+            this.position.bind('change', this.render, this)
         }
     }
 
