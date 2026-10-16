@@ -19,8 +19,13 @@ There is no linter.
 
 - `npm run build` — compile the theme: `scss/Avispa.scss` → `css/Avispa.css` (via `npx sass`).
 - `npm run example` — install, build, serve, and open the demo (see below).
-- `npm test` — Playwright smoke tests (`test/example.spec.js`) that drive the example
-  with real pointer, wheel, and touch input. `pretest` installs and builds `example/`;
+- `npm test` — Playwright tests, also run by GitHub Actions (`.github/workflows/test.yml`)
+  on pushes to `main` and on PRs. `test/example.spec.js` drives the example with real
+  pointer, wheel, and touch input. `test/socket.spec.js` injects `js/Socket.js` into a
+  page (it has no requires), stands in for the server with `page.routeWebSocket`
+  (unrouted connections are refused by the static server, like a server that is
+  down), and drives reconnect/keepalive timers with a paused `page.clock` — an
+  installed clock otherwise keeps pace with real time. `pretest` installs and builds `example/`;
   `playwright.config.js` serves it on port 8123 and runs the installed Google Chrome
   (`channel: 'chrome'`, so no Playwright browser download — without Chrome, run
   `npx playwright install chromium` and drop `channel`). For one test:
@@ -121,7 +126,9 @@ It is wired into `Avispa` opt-in: pass `socket` to the constructor — a path st
 (`new Graph({ el, socket: 'ws' })`) or a `Socket` options object. Inbound messages
 are routed to `Avispa.prototype.OnMessage(msg)` (a no-op hook to override in a
 subclass) unless the options object supplies its own `onmessage`. `Avispa.remove()`
-closes the socket.
+closes the socket. `Socket` itself is covered by `test/socket.spec.js`; the `Avispa`
+wiring (`socket` option → `OnMessage`, `remove()`) is not, since the example doesn't
+use a socket.
 
 ### Host integration pattern
 
