@@ -27,8 +27,6 @@ class Node extends BaseObject {
             .appendTo(this.$el)
 
         super.initialize(options)
-
-        this.render()
     }
 
     render() {

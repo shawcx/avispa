@@ -15,17 +15,21 @@ const Socket       = require('./Socket.js')
 class Avispa extends Backbone.View {
     events() {
         return {
-            'mousedown.avispa'      : 'OnMouseDown',
-            'mousemove.avispa'      : 'OnMouseMove',
-            'mouseup.avispa'        : 'OnMouseUp',
-            'mousewheel.avispa'     : 'OnMouseWheel',
-            'DOMMouseScroll.avispa' : 'OnMouseWheel',
-            'contextmenu.avispa'    : 'OnContextMenu',
+            'pointerdown.avispa'   : 'OnMouseDown',
+            'pointermove.avispa'   : 'OnMouseMove',
+            'pointerup.avispa'     : 'OnMouseUp',
+            'pointercancel.avispa' : 'OnPointerCancel',
+            'wheel.avispa'         : 'OnMouseWheel',
+            'contextmenu.avispa'   : 'OnContextMenu',
             }
     }
 
     initialize(options) {
         context.a = this
+
+        // the surface handles its own drags: keep touch from panning the page
+        // and drags from selecting text
+        this.$el.css({'touch-action': 'none', 'user-select': 'none'})
 
         _.bindAll(this, 'render',
             'OnMouseDown', 'OnMouseMove', 'OnMouseUp', 'OnMouseWheel', 'OnContextMenu')
@@ -129,14 +133,14 @@ class Avispa extends Backbone.View {
             return cancelEvent(event)
         }
 
-        switch (event.which) {
-            case 1:
+        switch (event.button) {
+            case 0:
                 this.LeftDown(event)
                 break
-            case 2:
+            case 1:
                 this.MiddleDown(event)
                 break
-            case 3:
+            case 2:
                 if (this.RightDown) {
                     this.RightDown(event)
                 }
@@ -182,14 +186,14 @@ class Avispa extends Backbone.View {
         if (this.dragItem) {
             // click hooks are optional on drag items (Link has no Middle/RightClick)
             if (this.dragItem.jitter < 3) {
-                switch (event.which) {
-                    case 1:
+                switch (event.button) {
+                    case 0:
                         if (this.dragItem.LeftClick) this.dragItem.LeftClick(event)
                         break
-                    case 2:
+                    case 1:
                         if (this.dragItem.MiddleClick) this.dragItem.MiddleClick(event)
                         break
-                    case 3:
+                    case 2:
                         if (this.dragItem.RightClick) this.dragItem.RightClick(event)
                         break
                 }
@@ -200,14 +204,14 @@ class Avispa extends Backbone.View {
             this.dragItem = null
         }
         else {
-            switch (event.which) {
-                case 1:
+            switch (event.button) {
+                case 0:
                     this.LeftClick(event)
                     break
-                case 2:
+                case 1:
                     this.MiddleClick(event)
                     break
-                case 3:
+                case 2:
                     this.RightClick(event)
                     break
             }
@@ -216,8 +220,18 @@ class Avispa extends Backbone.View {
         return cancelEvent(event)
     }
 
+    OnPointerCancel(event) {
+        // the browser took the pointer over: drop any pan or drag in progress
+        this.offset   = null
+        this.dragItem = null
+    }
+
     OnMouseWheel(event) {
-        this.Zoom(normalizeWheel(event))
+        // a zero delta (a horizontal-only scroll) would reset the zoom to 1.0
+        let delta = normalizeWheel(event)
+        if (delta) {
+            this.Zoom(delta)
+        }
         //this.$('#zoomslider').slider('option', 'value', this.scale)
         return cancelEvent(event)
     }

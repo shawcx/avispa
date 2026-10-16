@@ -8,13 +8,20 @@ const context         = require('./Context.js')
 
 
 class BaseObject extends Backbone.View {
+    // render once the whole initialize chain has run, so a subclass's own
+    // elements exist before its render does
+    constructor(options) {
+        super(options)
+        this.render()
+    }
+
     events() {
         return {
-            'mousedown'   : 'OnMouseDown',
-            'mouseenter'  : 'OnMouseEnter',
-            'mouseleave'  : 'OnMouseLeave',
-            'mouseup'     : 'OnMouseUp',
-            'contextmenu' : 'OnContextMenu',
+            'pointerdown'  : 'OnMouseDown',
+            'pointerenter' : 'OnMouseEnter',
+            'pointerleave' : 'OnMouseLeave',
+            'pointerup'    : 'OnMouseUp',
+            'contextmenu'  : 'OnContextMenu',
             }
     }
 
@@ -41,7 +48,7 @@ class BaseObject extends Backbone.View {
         }
 
         // bound after the initial ParentDrag: a subclass is still building its
-        // elements here, and renders itself once its own initialize is done
+        // elements here, and the constructor renders once initialize is done
         if (this.position) {
             this.position.bind('change', this.render, this)
         }

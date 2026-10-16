@@ -149,8 +149,6 @@ class Group extends Avispa.Group {
             .attr('dy', '1.5em')
             .text(this.model.get('title'))
             .appendTo(this.$el)
-
-        this.render()
     }
 
     render() {

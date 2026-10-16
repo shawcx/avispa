@@ -1,2 +1,4 @@
 node_modules
 /shawcx-avispa*
+/test-results
+/playwright-report

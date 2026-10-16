@@ -10,16 +10,22 @@ const context               = require('./Context.js')
 class Link extends Backbone.View {
     static RAD = 180.0 / Math.PI
 
+    // render once the whole initialize chain has run, as BaseObject does
+    constructor(options) {
+        super(options)
+        this.render()
+    }
+
     el() {
         return $SVG('g').attr('class', 'link')
     }
 
     events() {
         return {
-            'mousedown'   : 'OnMouseDown',
-            'mouseenter'  : 'OnMouseEnter',
-            'mouseleave'  : 'OnMouseLeave',
-            'contextmenu' : 'OnContextMenu',
+            'pointerdown'  : 'OnMouseDown',
+            'pointerenter' : 'OnMouseEnter',
+            'pointerleave' : 'OnMouseLeave',
+            'contextmenu'  : 'OnContextMenu',
             }
     }
 
@@ -45,8 +51,6 @@ class Link extends Backbone.View {
                 p.position.bind('change:collapsed', this.render, this)
             }
         }
-
-        this.render()
 
         if (options.parent) {
             options.parent.$links.append(this.$el)
