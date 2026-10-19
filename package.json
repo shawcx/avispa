@@ -9,7 +9,8 @@
     "build": "npx sass scss/Avispa.scss css/Avispa.css",
     "example": "npm --prefix example install && npm --prefix example start",
     "test": "playwright test",
-    "pretest": "npm --prefix example install --no-audit --no-fund && npm --prefix example run build"
+    "pretest": "npm --prefix example install --no-audit --no-fund && npm --prefix example run build",
+    "publish:skunk": "SKUNK_NPM_TOKEN=$(glab config get token --host code.skunk.tools) npm publish --@shawcx:registry=https://code.skunk.tools/api/v4/projects/69/packages/npm/"
   },
   "repository": {
     "type": "git",
