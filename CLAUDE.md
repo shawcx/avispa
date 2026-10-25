@@ -22,10 +22,9 @@ There is no linter.
 
 - `npm run build` — compile the theme: `scss/Avispa.scss` → `css/Avispa.css` (via `npx sass`).
 - `npm run example` — install, build, serve, and open the demo (see below).
-- `npm run publish:skunk` — publish to the npm registry of `nodejs/avispa` (project 69)
-  on code.skunk.tools; the token comes from `glab` into `SKUNK_NPM_TOKEN`, which
-  `.npmrc` reads. npm forwarding is off on the `nodejs` group, otherwise npm sees the
-  npmjs versions and refuses. Plain `npm publish` still goes to npmjs.
+- `npm publish` — publish to npmjs, where the package is public. The account has
+  two-factor auth, so npm asks for browser approval: run it in a real terminal (`! npm
+  publish`), not non-interactively. The code.skunk.tools registry is no longer used.
 - `npm test` — Playwright tests, also run by GitHub Actions (`.github/workflows/test.yml`)
   on pushes to `main` and on PRs, once with jQuery 3 and once with jQuery 4 (both are
   in the peer range; the lockfile has 4). After a push to `main` passes, its `pages`
