@@ -29,13 +29,13 @@
   "homepage": "https://github.com/shawcx/avispa#readme",
   "peerDependencies": {
     "backbone": "^1.4.1",
-    "jquery": "^3.6.3",
+    "jquery": "^4.0.0",
     "underscore": "^1.13.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "backbone": "^1.4.1",
-    "jquery": "^3.6.3",
+    "jquery": "^4.0.0",
     "sass": "^1.58.2",
     "underscore": "^1.13.6"
   }
