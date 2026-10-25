@@ -27,7 +27,11 @@ There is no linter.
   `.npmrc` reads. npm forwarding is off on the `nodejs` group, otherwise npm sees the
   npmjs versions and refuses. Plain `npm publish` still goes to npmjs.
 - `npm test` — Playwright tests, also run by GitHub Actions (`.github/workflows/test.yml`)
-  on pushes to `main` and on PRs. `test/example.spec.js` drives the example with real
+  on pushes to `main` and on PRs, once with jQuery 3 and once with jQuery 4 (both are
+  in the peer range; the lockfile has 4). After a push to `main` passes, its `pages`
+  job builds `example/` and deploys it to GitHub Pages (`example.html` → `index.html`)
+  as the demo at https://shawcx.github.io/avispa/ — the old `gh-pages` branch is no
+  longer used. `test/example.spec.js` drives the example with real
   pointer, wheel, and touch input. `test/socket.spec.js` injects `js/Socket.js` into a
   page (it has no requires), stands in for the server with `page.routeWebSocket`
   (unrouted connections are refused by the static server, like a server that is

@@ -9,6 +9,10 @@ jobs:
   test:
     # ubuntu-latest ships Google Chrome, which playwright.config.js uses
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # both majors the jquery peer dependency allows
+        jquery: [3, 4]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -16,4 +20,39 @@ jobs:
           node-version: lts/*
           cache: npm
       - run: npm ci
+      - run: npm install --no-save jquery@${{ matrix.jquery }}
       - run: npm test
+
+  # publish the example as the demo once main passes
+  pages:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: npm --prefix example install --no-audit --no-fund
+      - run: npm --prefix example run build
+      - run: |
+          mkdir site
+          cp example/example.html site/index.html
+          cp example/example.js example/example.css site/
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v5

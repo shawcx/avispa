@@ -1,7 +1,15 @@
 {
   "name": "@shawcx/avispa",
-  "version": "1.0.0",
-  "description": "SVG + Websockets",
+  "version": "2.0.0",
+  "description": "Draw node/link graphs in SVG and drag, pan, zoom, and collapse them; Backbone views with an optional WebSocket feed",
+  "keywords": [
+    "svg",
+    "graph",
+    "network",
+    "diagram",
+    "backbone",
+    "websocket"
+  ],
   "main": "js/Avispa.js",
   "sass": "scss/Avispa.scss",
   "style": "css/Avispa.css",
@@ -29,13 +37,13 @@
   "homepage": "https://github.com/shawcx/avispa#readme",
   "peerDependencies": {
     "backbone": "^1.4.1",
-    "jquery": "^3.6.3",
+    "jquery": "^3.6.3 || ^4.0.0",
     "underscore": "^1.13.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "backbone": "^1.4.1",
-    "jquery": "^3.6.3",
+    "jquery": "^3.6.3 || ^4.0.0",
     "sass": "^1.58.2",
     "underscore": "^1.13.6"
   }
