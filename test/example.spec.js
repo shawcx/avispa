@@ -165,6 +165,22 @@ test('the wheel zooms in steps and stops at the limits', async ({ page }) => {
     await expect.poll(() => scale(page)).toBeCloseTo(2.5)
 })
 
+test('the wheel zooms toward the pointer', async ({ page }) => {
+    const n3 = (await state(page)).nodes['Node 3']
+    const at = await toPage(page, n3.x, n3.y)
+    await page.mouse.move(...at)
+
+    for (const [dy, zoomed] of [[-300, 1.375], [500, 0.75]]) {
+        await page.mouse.wheel(0, dy)
+        await expect.poll(() => scale(page)).toBeCloseTo(zoomed)
+
+        // Node 3 stays under the pointer
+        const now = await toPage(page, n3.x, n3.y)
+        expect(now[0]).toBeCloseTo(at[0], 1)
+        expect(now[1]).toBeCloseTo(at[1], 1)
+    }
+})
+
 test('dragging the background pans; middle-click recenters', async ({ page }) => {
     const s = await state(page)
 
@@ -382,8 +398,103 @@ test('a removed item stops following its models and leaves its group', async ({ 
     expect(t.groups['Group 1']).toMatchObject({ w: 65, h: 85 })
 })
 
+// the surface as a box inside the page instead of the whole window
+const BOX = { left: 200, top: 140, width: 720, height: 460 }
+
+test.describe('embedded in a page', () => {
+    test.beforeEach(async ({ page }) => {
+        // an adopted sheet wins over the page's own <style>, and is in place
+        // before the example builds its graph
+        await page.addInitScript(box => {
+            const sheet = new CSSStyleSheet()
+            sheet.replaceSync(`div#surface {
+                left: ${box.left}px; top: ${box.top}px; width: ${box.width}px; height: ${box.height}px;
+                right: auto; bottom: auto;
+            }`)
+            document.adoptedStyleSheets = [sheet]
+        }, BOX)
+        await page.goto('/example.html')
+        await page.waitForSelector('g.link')
+    })
+
+    // a point on the background near the box's bottom-left corner
+    const corner = [BOX.left + 20, BOX.top + BOX.height - 20]
+
+    test('the scene starts centered in the surface, and middle-click recenters it there', async ({ page }) => {
+        const middle = [BOX.width / 2, BOX.height / 2]
+        expect((await state(page)).pan).toEqual(middle)
+
+        await drag(page, corner, [corner[0] + 60, corner[1] - 30])
+        expect((await state(page)).pan).not.toEqual(middle)
+        await page.mouse.click(...corner, { button: 'middle' })
+        expect((await state(page)).pan).toEqual(middle)
+    })
+
+    test('a drag carries on outside the surface and ends where it is released', async ({ page }) => {
+        const s = await state(page)
+
+        // pan past the box's left edge, release out there, then come back
+        // over the box with no button down
+        await drag(page, corner, [BOX.left - 100, corner[1]])
+        let t = await state(page)
+        expect(t.pan[0] - s.pan[0]).toBeCloseTo(-120, 0)
+        expect(t.pan[1]).toBeCloseTo(s.pan[1], 0)
+        await page.mouse.move(...corner, { steps: 4 })
+        expect((await state(page)).pan).toEqual(t.pan)
+
+        // and the same with a group, by its bottom-left corner
+        const g1   = t.groups['Group 1']
+        const from = await toPage(page, g1.x + 10, g1.y + g1.h - 10)
+        const to   = [BOX.left - 50, from[1] + 30]
+        await drag(page, from, to)
+        t = await state(page)
+        expectAt(t.groups['Group 1'], g1.x + to[0] - from[0], g1.y + 30)
+        await page.mouse.move(...corner, { steps: 4 })
+        expect((await state(page)).groups['Group 1']).toEqual(t.groups['Group 1'])
+    })
+})
+
 test.describe('touch', () => {
     test.use({ hasTouch: true })
+
+    test('pinching zooms around the fingers instead of dragging what they touch', async ({ page }) => {
+        const s  = await state(page)
+        const n3 = s.nodes['Node 3']
+        const [x, y] = await toPage(page, n3.x, n3.y)
+
+        // both fingers land on Node 3, 20px either side of its center, and
+        // spread to 40px: twice as far apart
+        const cdp   = await page.context().newCDPSession(page)
+        const touch = (type, touchPoints) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints })
+        const at    = d => [{ x: x - d, y, id: 0 }, { x: x + d, y, id: 1 }]
+        await touch('touchStart', at(20))
+        for (let d = 22.5; d <= 40; d += 2.5) {
+            await touch('touchMove', at(d))
+        }
+
+        // touch moves are delivered on animation frames, so the last can lag
+        await expect.poll(() => scale(page)).toBeCloseTo(2, 3)
+        const t = await state(page)
+        expect(t.nodes).toEqual(s.nodes)
+        expect(t.groups).toEqual(s.groups)
+        const now = await toPage(page, n3.x, n3.y)
+        expect(now[0]).toBeCloseTo(x, 1)
+        expect(now[1]).toBeCloseTo(y, 1)
+
+        // lifting one finger and moving the other neither pans nor drags, and
+        // lifting the last isn't a click
+        await page.evaluate(() => {
+            window.clicks = 0
+            window.example.graph.LeftClick = () => window.clicks++
+        })
+        await touch('touchEnd', [at(40)[1]])
+        await touch('touchMove', [{ x: x + 80, y: y + 40, id: 1 }])
+        await touch('touchEnd', [])
+        const u = await state(page)
+        expect(u.pan).toEqual(t.pan)
+        expect(u.nodes).toEqual(s.nodes)
+        expect(await page.evaluate(() => window.clicks)).toBe(0)
+    })
 
     test('a touch drag moves a node', async ({ page }) => {
         const s  = await state(page)

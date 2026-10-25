@@ -81,7 +81,13 @@ g.pan > g.zoom > { g.groups, g.links, g.objects, g.labels }
 ```
 
 `g.pan` gets a `translate(...)`; `g.zoom` gets a `scale(...)`. `Avispa` owns:
-- **Pan** (`Pan`), **zoom/scale** (`Scale`, `Zoom`), middle-click recenter.
+- **Pan** (`Pan`, `PanTo`), **zoom/scale** (`Scale`, `Zoom`, `ZoomTo`), and
+  middle-click recenter (`Center`, which puts the surface origin at `Middle()`, the
+  middle of the SVG itself — not the window, so an SVG embedded in a page works).
+  Coordinates come in three kinds: client (the event's), local (the SVG's own,
+  `Local(x, y)`, through `getScreenCTM`), and surface (local undone by pan and zoom,
+  `Surface([x, y])`; `Point(event)` truncates it). Wheel zoom and pinch-zoom keep the
+  surface point under the pointer or the fingers' midpoint in place.
 - A **global pointer state machine**: `OnMouseDown/Move/Up` (names kept so host
   overrides still work) are bound to `pointerdown/move/up` and dispatch by
   `event.button` (0/1/2); `pointercancel` drops any drag. `initialize` sets
@@ -91,7 +97,16 @@ g.pan > g.zoom > { g.groups, g.links, g.objects, g.labels }
   the whole scene), `this.arrow` (a link being drawn: a host hook — the host sets it
   to any object with `Drag(event)` and `Remove()`; the library never creates one),
   `this.dragItem` (an item is being dragged). A drag with < 3 `jitter` moves is treated as a click and dispatched
-  to the item's `LeftClick`/`MiddleClick`/`RightClick`.
+  to the item's `LeftClick`/`MiddleClick`/`RightClick`. The first move of a pan or
+  drag calls `setPointerCapture` on the SVG, so the drag carries on outside it and
+  its release still arrives; capturing at pointerdown instead would retarget plain
+  clicks and double-clicks to the SVG (it breaks the title double-click test).
+- **Pinch-zoom**: `OnTouch` is a native *capture-phase* listener for the four pointer
+  events (items stop pointerdown from bubbling), tracking touch pointers in
+  `this.touches`. A second finger clears `offset`/`dragItem` and starts
+  `this.pinch`; while it lasts (until every finger is up) touch events are stopped
+  there with `stopImmediatePropagation`, so nothing else drags and the last lift
+  isn't a `LeftClick`.
 - The `#Arrow` SVG marker referenced by links must be defined in the host's `<defs>`
   (again, see `example/example.html`).
 
@@ -162,7 +177,9 @@ layer (`graph.$groups`, `graph.$objects`, etc.). The example puts its items on
 
 The `js/` sources are a port from a single CoffeeScript file (see history around
 `098abd1`). Pan, wheel zoom, node/group drag, link bending, nested-group growth,
-collapse, and touch drag are covered by `npm test`. Fixed so far:
+collapse, touch drag, pinch-zoom, and an SVG embedded in a smaller box (the
+`embedded in a page` tests restyle `#surface` with an adopted stylesheet) are
+covered by `npm test`. Fixed so far:
 
 - `js/Utils.js` now exports `$SVG` (used by `Node`, `Group`, `Link`, and re-exported
   by `Avispa.js`); the dead local `$SVG`/`normalizeWheel` copies in `Avispa.js` were
@@ -181,8 +198,10 @@ collapse, and touch drag are covered by `npm test`. Fixed so far:
 - A plain library `Group` was never drawn in place until its position first changed;
   rendering from the constructor fixed that for every item.
 - Legacy input replaced: `mousewheel`/`DOMMouseScroll` → `wheel`, `event.which` →
-  `event.button`, mouse → pointer events (touch and pen drag; multi-touch gestures
-  such as pinch-zoom are not handled).
+  `event.button`, mouse → pointer events (touch and pen drag, and pinch-zoom).
+- 2.1.0: centering used the window's size, and drags lost their pointer at the
+  SVG's edge (a release outside it left the drag running), both hidden by the
+  full-window example; zoom scaled around the origin instead of the pointer.
 - `this.arrow` is not missing port work — the CoffeeScript original never set it
   either.
 - `js/Socket.js` was hardened while being integrated: added the pre-open send queue,

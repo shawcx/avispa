@@ -83,7 +83,8 @@ $(() => {
 
 On screen:
 
-- Drag the background to pan, scroll to zoom, middle-click to recenter.
+- Drag the background to pan, scroll or pinch to zoom in on the spot under the
+  pointer or between your fingers, and middle-click to recenter.
 - Drag a node or group to move it; a group's children come along. A node stays
   inside its group, and a nested group dragged past its parent's edge grows it.
 - Drag a group's bottom-right corner to resize it, down to what its contents need.

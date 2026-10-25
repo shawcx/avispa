@@ -13,6 +13,8 @@ const Link         = require('./Link.js')
 const Socket       = require('./Socket.js')
 
 class Avispa extends Backbone.View {
+    static TOUCH_EVENTS = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']
+
     events() {
         return {
             'pointerdown.avispa'   : 'OnMouseDown',
@@ -32,13 +34,22 @@ class Avispa extends Backbone.View {
         this.$el.css({'touch-action': 'none', 'user-select': 'none'})
 
         _.bindAll(this, 'render',
-            'OnMouseDown', 'OnMouseMove', 'OnMouseUp', 'OnMouseWheel', 'OnContextMenu')
+            'OnMouseDown', 'OnMouseMove', 'OnMouseUp', 'OnMouseWheel', 'OnContextMenu', 'OnTouch')
 
         this.scale    = 1.0
         this.links    = {}
         this.offset   = null
         this.dragItem = null
         this.arrow    = null
+
+        // touch points by pointerId, as client [x, y], and the pinch two of
+        // them make. Watched in the capture phase, since items stop pointerdown
+        // from bubbling up to the surface
+        this.touches  = new Map()
+        this.pinch    = null
+        for (const type of Avispa.TOUCH_EVENTS) {
+            this.el.addEventListener(type, this.OnTouch, true)
+        }
 
         this.position = {
             x: 0,
@@ -61,10 +72,10 @@ class Avispa extends Backbone.View {
         this.$objects = this.$el.find('g.objects')
         this.$labels  = this.$el.find('g.labels')
 
-        this.$pan.x = parseInt(window.innerWidth  / 2)
-        this.$pan.y = parseInt(window.innerHeight / 2)
+        this.$pan.x = 0
+        this.$pan.y = 0
 
-        this.Pan(0,0)
+        this.Center()
 
         // opt-in WebSocket transport: `socket` may be a path string or a
         // Socket options object. Incoming messages are routed to OnMessage
@@ -86,6 +97,9 @@ class Avispa extends Backbone.View {
         if (this.socket) {
             this.socket.close()
         }
+        for (const type of Avispa.TOUCH_EVENTS) {
+            this.el.removeEventListener(type, this.OnTouch, true)
+        }
         return super.remove()
     }
 
@@ -105,25 +119,66 @@ class Avispa extends Backbone.View {
         return this
     }
 
-    Zoom(delta) {
-        let scale = (delta == 0) ? 1.0 : this.scale + delta * this.zoom.step
+    // put the surface's origin in the middle of the SVG
+    Center() {
+        let [x, y] = this.Middle()
+        return this.Pan(parseInt(x) - this.$pan.x, parseInt(y) - this.$pan.y)
+    }
+
+    // zoom by `delta` steps (0 resets to 1), keeping what's drawn at `at`
+    // where it is (see ZoomTo)
+    Zoom(delta, at) {
+        return this.ZoomTo((delta == 0) ? 1.0 : this.scale + delta * this.zoom.step, at)
+    }
+
+    // zoom to `scale` within the limits, keeping what's drawn at `at` (an
+    // [x, y] from Local) where it is; without `at`, the origin stays put
+    ZoomTo(scale, at) {
         scale = Math.min(this.zoom.max, Math.max(this.zoom.min, scale))
+        if (!at) {
+            return this.Scale(scale)
+        }
+        let point = this.Surface(at)
         this.Scale(scale)
-        return this
+        return this.PanTo(point, at)
+    }
+
+    // pan so the surface point `point` is drawn at `at` (an [x, y] from Local)
+    PanTo(point, at) {
+        return this.Pan(
+            at[0] - point[0] * this.scale - this.$pan.x,
+            at[1] - point[1] * this.scale - this.$pan.y)
+    }
+
+    // translates a client x,y into the SVG's own coordinates, before the pan
+    // and zoom; an SVG that isn't laid out (display: none) has no transform
+    Local(x, y) {
+        let ctm = this.el.getScreenCTM()
+        if (!ctm) {
+            return [x, y]
+        }
+        let point = this.el.createSVGPoint()
+        point.x = x
+        point.y = y
+        point = point.matrixTransform(ctm.inverse())
+        return [point.x, point.y]
+    }
+
+    // the middle of the SVG, from Local
+    Middle() {
+        let box = this.el.getBoundingClientRect()
+        return this.Local(box.left + box.width / 2, box.top + box.height / 2)
+    }
+
+    // the surface point drawn at `at` (an [x, y] from Local)
+    Surface(at) {
+        return [(at[0] - this.$pan.x) / this.scale, (at[1] - this.$pan.y) / this.scale]
     }
 
     Point(event) {
         // translates the client x,y into the surface x,y
-        let point = this.el.createSVGPoint()
-        point.x = event.clientX
-        point.y = event.clientY
-        point = point.matrixTransform(this.el.getScreenCTM().inverse())
-
-        // account for the current pan and scale
-        point.x = parseInt((point.x - this.$pan.x) / this.scale)
-        point.y = parseInt((point.y - this.$pan.y) / this.scale)
-
-        return [point.x, point.y]
+        let [x, y] = this.Surface(this.Local(event.clientX, event.clientY))
+        return [parseInt(x), parseInt(y)]
     }
 
     OnMouseDown(event) {
@@ -156,12 +211,19 @@ class Avispa extends Backbone.View {
     }
 
     MiddleDown(event) {
-        this.Pan(-this.$pan.x + window.innerWidth / 2, -this.$pan.y + window.innerHeight / 2)
+        this.Center()
         this.Zoom(0)
         //this.$('#zoomslider').slider('option', 'value', 1)
     }
 
     OnMouseMove(event) {
+        // once a drag is moving, capture its pointer so the drag carries on
+        // outside the SVG and its release comes back here. Not on pointerdown:
+        // a plain click or double-click would then go to the SVG, not the item
+        if ((this.offset || this.dragItem) && !this.el.hasPointerCapture(event.pointerId)) {
+            this.el.setPointerCapture(event.pointerId)
+        }
+
         // drag the entire scene around
         if (this.offset) {
             this.Pan(event.clientX - this.offset[0], event.clientY - this.offset[1])
@@ -226,11 +288,58 @@ class Avispa extends Backbone.View {
         this.dragItem = null
     }
 
+    // A second finger turns whatever the first one started into a pinch,
+    // which zooms by how far apart the fingers move and pans with their
+    // midpoint. It lasts until every finger is up, and until then the touches
+    // go no further than here: lifting the last finger isn't a click.
+    OnTouch(event) {
+        // only touches that started here: one whose release never comes would
+        // turn every later single touch into a pinch
+        if (event.pointerType !== 'touch' ||
+            (event.type !== 'pointerdown' && !this.touches.has(event.pointerId))) {
+            return
+        }
+
+        if (event.type === 'pointerup' || event.type === 'pointercancel') {
+            this.touches.delete(event.pointerId)
+        }
+        else {
+            this.touches.set(event.pointerId, [event.clientX, event.clientY])
+        }
+
+        let [a, b] = this.touches.values()
+        let middle = () => this.Local((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+
+        if (event.type !== 'pointermove' && this.touches.size >= 2) {
+            // a pinch starts, or its fingers changed: start over from here
+            this.offset   = null
+            this.dragItem = null
+            this.pinch    = {
+                distance : Math.max(Math.hypot(b[0] - a[0], b[1] - a[1]), 1),
+                scale    : this.scale,
+                point    : this.Surface(middle()),
+                }
+        }
+        else if (event.type === 'pointermove' && this.pinch && this.touches.size >= 2) {
+            let distance = Math.hypot(b[0] - a[0], b[1] - a[1])
+            this.ZoomTo(this.pinch.scale * distance / this.pinch.distance)
+            this.PanTo(this.pinch.point, middle())
+        }
+
+        if (this.pinch) {
+            if (this.touches.size === 0) {
+                this.pinch = null
+            }
+            event.preventDefault()
+            event.stopImmediatePropagation()
+        }
+    }
+
     OnMouseWheel(event) {
         // a zero delta (a horizontal-only scroll) would reset the zoom to 1.0
         let delta = normalizeWheel(event)
         if (delta) {
-            this.Zoom(delta)
+            this.Zoom(delta, this.Local(event.clientX, event.clientY))
         }
         //this.$('#zoomslider').slider('option', 'value', this.scale)
         return cancelEvent(event)

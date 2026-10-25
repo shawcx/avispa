@@ -1,6 +1,6 @@
 {
   "name": "@shawcx/avispa",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Draw node/link graphs in SVG and drag, pan, zoom, and collapse them; Backbone views with an optional WebSocket feed",
   "keywords": [
     "svg",
