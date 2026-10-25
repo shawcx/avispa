@@ -37,7 +37,6 @@ class Avispa extends Backbone.View {
             'OnMouseDown', 'OnMouseMove', 'OnMouseUp', 'OnMouseWheel', 'OnContextMenu', 'OnTouch')
 
         this.scale    = 1.0
-        this.links    = {}
         this.offset   = null
         this.dragItem = null
         this.arrow    = null
@@ -50,11 +49,6 @@ class Avispa extends Backbone.View {
         for (const type of Avispa.TOUCH_EVENTS) {
             this.el.addEventListener(type, this.OnTouch, true)
         }
-
-        this.position = {
-            x: 0,
-            y: 0
-            }
 
         this.zoom = {
             step : 0.125,
@@ -206,14 +200,12 @@ class Avispa extends Backbone.View {
     }
 
     LeftDown(event) {
-        //if event.shiftKey
         this.offset = [event.clientX, event.clientY]
     }
 
     MiddleDown(event) {
         this.Center()
         this.Zoom(0)
-        //this.$('#zoomslider').slider('option', 'value', 1)
     }
 
     OnMouseMove(event) {
@@ -341,7 +333,6 @@ class Avispa extends Backbone.View {
         if (delta) {
             this.Zoom(delta, this.Local(event.clientX, event.clientY))
         }
-        //this.$('#zoomslider').slider('option', 'value', this.scale)
         return cancelEvent(event)
     }
 

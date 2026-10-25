@@ -8,8 +8,6 @@ const context               = require('./Context.js')
 
 
 class Link extends Backbone.View {
-    static RAD = 180.0 / Math.PI
-
     // render once the whole initialize chain has run, as BaseObject does
     constructor(options) {
         super(options)
@@ -55,11 +53,6 @@ class Link extends Backbone.View {
         if (options.parent) {
             options.parent.$links.append(this.$el)
         }
-    }
-
-    update() {
-        //this.label.text(name)
-        return
     }
 
     // the items the ends attach to: an end hidden inside a collapsed group
@@ -126,14 +119,7 @@ class Link extends Backbone.View {
         let xc = ((lx + rx) >> 1) + arc * Math.cos(ang)
         let yc = ((ly + ry) >> 1) - arc * Math.sin(ang)
 
-        let mx = xc - (arc>>1) * Math.cos(ang)
-        let my = yc + (arc>>1) * Math.sin(ang)
-
-        let rot = -(Link.RAD * ang)
-        rot += (rot > 0 && rot < 180) ? -90 : 90
-
         this.path.attr('d', `M ${lx} ${ly} Q ${xc} ${yc} ${rx} ${ry}`)
-        //this.label.attr('x', mx).attr('y', my).attr('transform', `rotate(${rot}, ${mx} ${my})`)
 
         return this
     }

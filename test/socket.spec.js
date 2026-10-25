@@ -1,9 +1,9 @@
 'use strict'
 
-// Tests for js/Socket.js in Chrome. Playwright stands in for the server
-// (page.routeWebSocket); unrouted connections hit the static test server,
-// which refuses the upgrade, like a server that is down. A fake page clock
-// drives the reconnect and keepalive timers.
+// Tests for js/Socket.js, and Avispa's socket option, in Chrome. Playwright
+// stands in for the server (page.routeWebSocket); unrouted connections hit the
+// static test server, which refuses the upgrade, like a server that is down. A
+// fake page clock drives the reconnect and keepalive timers.
 
 const fs   = require('fs')
 const path = require('path')
@@ -39,8 +39,8 @@ async function loadSocket(page) {
 // counts every connection attempt in `window.attempts`
 function open(page, options = {}) {
     return page.evaluate(options => {
-        window.events = { open: 0, close: [], error: 0, messages: [] }
-        window.socket = new Socket(Object.assign({
+        const events  = window.events = { open: 0, close: [], error: 0, messages: [] }
+        const socket  = window.socket = new window.Socket(Object.assign({
             onopen:    ()    => events.open++,
             onclose:   event => events.close.push(event.code),
             onerror:   ()    => events.error++,
@@ -50,7 +50,7 @@ function open(page, options = {}) {
         window.attempts = 1
         const connect = socket.connect.bind(socket)
         socket.connect = () => {
-            attempts++
+            window.attempts++
             connect()
         }
     }, options)
@@ -78,7 +78,7 @@ test('connects to /ws on the page\'s host and flushes queued sends in order', as
     await loadSocket(page)
 
     await page.evaluate(() => {
-        window.socket = new Socket({ path: 'ws' })
+        const socket = new window.Socket({ path: 'ws' })
         socket.send({ n: 1 })
         socket.sendraw('two')
         socket.send({ n: 3 })
@@ -148,7 +148,7 @@ test('close() stops reconnecting, whether open or waiting to retry', async ({ pa
     // waiting to retry after a refused attempt
     await open(page, { timeout: 1 })
     await expect.poll(() => closes(page)).toBe(1)
-    await page.evaluate(() => socket.close())
+    await page.evaluate(() => window.socket.close())
     await page.clock.runFor(60 * 1000)
     expect(await attempts(page)).toBe(1)
 
@@ -156,7 +156,7 @@ test('close() stops reconnecting, whether open or waiting to retry', async ({ pa
     await serve(page)
     await open(page, { timeout: 1 })
     await expect.poll(() => opens(page)).toBe(1)
-    await page.evaluate(() => socket.close())
+    await page.evaluate(() => window.socket.close())
     await expect.poll(() => closes(page)).toBe(1)
     await page.clock.runFor(60 * 1000)
     expect(await attempts(page)).toBe(1)
@@ -173,4 +173,36 @@ test('close code 4004 reloads the page', async ({ page }) => {
         server.connections[0].close({ code: 4004 }),
     ])
     expect(await page.evaluate(() => typeof window.Socket)).toBe('undefined')
+})
+
+// Avispa's `socket` option, through the example's bundle. Each new Avispa takes
+// over the page from the example's graph, which this test leaves alone.
+test('an Avispa socket delivers to OnMessage, or to its own onmessage, and remove() closes it', async ({ page }) => {
+    const server = await serve(page, ws => {
+        ws.onClose(() => server.closed++)
+        ws.send(JSON.stringify({ hello: 'graph' }))
+    })
+    server.closed = 0
+    await page.goto('/example.html')
+    await page.waitForSelector('g.link')
+
+    await page.evaluate(() => {
+        const { Avispa } = window.example
+        const got = window.got = { hook: [], own: [] }
+        class Graph extends Avispa.Avispa {
+            OnMessage(msg) {
+                got.hook.push(msg)
+            }
+        }
+        const svg = () => Avispa.$SVG('svg').appendTo(document.body)
+        window.graphs = [
+            new Graph({ el: svg(), socket: 'ws' }),
+            new Graph({ el: svg(), socket: { path: 'ws', onmessage: msg => got.own.push(msg) } }),
+        ]
+    })
+    await expect.poll(() => page.evaluate(() => window.got))
+        .toEqual({ hook: [{ hello: 'graph' }], own: [{ hello: 'graph' }] })
+
+    await page.evaluate(() => window.graphs.forEach(graph => graph.remove()))
+    await expect.poll(() => server.closed).toBe(2)
 })

@@ -1,7 +1,6 @@
 'use strict'
 
 const $        = require('jquery')
-const _        = require('underscore')
 const Backbone = require('backbone')
 
 const Avispa   = require('@shawcx/avispa')
@@ -128,7 +127,7 @@ $(document).ready(function() {
     })
 
     // for poking at from the console, and for the tests
-    window.example = { graph, n1, n2, n3, n4, link1, link2, link3, link4 }
+    window.example = { Avispa, graph, n1, n2, n3, n4, link1, link2, link3, link4 }
 })
 
 class Graph extends Avispa.Avispa {

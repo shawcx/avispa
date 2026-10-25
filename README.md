@@ -120,5 +120,7 @@ Development
 -----------
 
 - `npm run example` builds the demo in `example/` and opens it in a browser.
-- `npm test` runs the Playwright tests in Google Chrome.
+- `npm test` runs the Playwright tests in Google Chrome, and `npm run lint` runs ESLint.
 - `npm run build` compiles `scss/Avispa.scss` to `css/Avispa.css`.
+- To release, bump the version in `package.json` and push a matching `vX.Y.Z` tag;
+  CI publishes it to npm and creates the GitHub release.

@@ -1,7 +1,6 @@
 'use strict'
 
 const _        = require('underscore')
-const Backbone = require('backbone')
 
 const { cancelEvent, $SVG } = require('./Utils.js')
 const context               = require('./Context.js')

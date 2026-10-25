@@ -1,0 +1,46 @@
+name: release
+
+# Publishes a version tag (v1.2.3, matching package.json) to npmjs, then makes
+# its GitHub release. It uses npm trusted publishing: no token, since the
+# package's settings on npmjs.com name this repo and workflow, and the package
+# gets provenance. Run it by hand for a tag pushed before this workflow existed.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The tag to release, e.g. v2.1.0
+        required: true
+
+jobs:
+  release:
+    # ubuntu-latest ships Google Chrome, which the tests use
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # the GitHub release
+      id-token: write   # npm trusted publishing
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      # trusted publishing needs npm 11.5.1 or later
+      - run: npm install -g npm@latest
+      - name: Check the tag matches package.json
+        run: test "$TAG" = "v$(node -p 'require("./package.json").version')"
+      - run: npm ci
+      # older tags have no lint script
+      - run: npm run lint --if-present
+      - run: npm test
+      - run: npm publish
+      - name: GitHub release
+        run: gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --verify-tag --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

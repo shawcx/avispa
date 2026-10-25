@@ -18,13 +18,20 @@ update PRs for npm (root and `example/`) and GitHub Actions.
 
 ## Commands
 
-There is no linter.
-
+- `npm run lint` — ESLint (`eslint.config.js`: recommended rules, browser + CommonJS
+  globals, unused function arguments allowed since hooks name theirs). CI runs it.
+  Code passed to `page.evaluate` runs in the page, so it names page globals as
+  `window.x` (a bare `x` can collide with a Node-side helper of the same name).
 - `npm run build` — compile the theme: `scss/Avispa.scss` → `css/Avispa.css` (via `npx sass`).
 - `npm run example` — install, build, serve, and open the demo (see below).
-- `npm publish` — publish to npmjs, where the package is public. The account has
-  two-factor auth, so npm asks for browser approval: run it in a real terminal (`! npm
-  publish`), not non-interactively. The code.skunk.tools registry is no longer used.
+- Releasing: bump `version` in `package.json`, commit, and push a matching `vX.Y.Z`
+  tag. `.github/workflows/release.yml` checks the tag against `package.json`, runs
+  lint and tests, publishes to npmjs through npm trusted publishing (no token; the
+  package's npmjs settings name this repo and `release.yml`; provenance is
+  automatic), and creates the GitHub release with generated notes. For a tag that
+  predates the workflow: `gh workflow run release.yml -f tag=vX.Y.Z`. A manual
+  `npm publish` needs browser 2FA approval, so it has to be run in a real terminal
+  (`! npm publish`). The code.skunk.tools registry is no longer used.
 - `npm test` — Playwright tests, also run by GitHub Actions (`.github/workflows/test.yml`)
   on pushes to `main` and on PRs, once with jQuery 3 and once with jQuery 4 (both are
   in the peer range; the lockfile has 4). After a push to `main` passes, its `pages`
@@ -159,9 +166,9 @@ It is wired into `Avispa` opt-in: pass `socket` to the constructor — a path st
 (`new Graph({ el, socket: 'ws' })`) or a `Socket` options object. Inbound messages
 are routed to `Avispa.prototype.OnMessage(msg)` (a no-op hook to override in a
 subclass) unless the options object supplies its own `onmessage`. `Avispa.remove()`
-closes the socket. `Socket` itself is covered by `test/socket.spec.js`; the `Avispa`
-wiring (`socket` option → `OnMessage`, `remove()`) is not, since the example doesn't
-use a socket.
+closes the socket. Both are covered by `test/socket.spec.js`: `Socket` injected into
+a blank page, and the `Avispa` wiring through the example's bundle (a second
+`Avispa` on a fresh SVG, built from `window.example.Avispa`).
 
 ### Host integration pattern
 
@@ -169,7 +176,7 @@ Host apps subclass the exported classes (`Avispa`, `Group`, `Node`, `Link`) and
 override `initialize` (calling `super`), `render`, `OnMessage`, and the `*Click` /
 `OnContextMenu` hooks. `example/src/example.js` is the reference for wiring: construct
 items with a `new Avispa.Position({...})`, then `append` their `$el` into the right
-layer (`graph.$groups`, `graph.$objects`, etc.). The example puts its items on
+layer (`graph.$groups`, `graph.$objects`, etc.). The example puts the module and its items on
 `window.example` for the console and the tests. `Avispa.js` re-exports `Position`,
 `Group`, `Node`, `Link`, `Socket`, `$SVG`, and `cancelEvent`.
 
@@ -184,8 +191,12 @@ covered by `npm test`. Fixed so far:
 - `js/Utils.js` now exports `$SVG` (used by `Node`, `Group`, `Link`, and re-exported
   by `Avispa.js`); the dead local `$SVG`/`normalizeWheel` copies in `Avispa.js` were
   removed in favor of the `Utils.js` versions.
-- `Link.render` now builds its `d` attribute with a real template literal, and uses
-  `Link.RAD` (was `this.RAD`, which is `undefined` on an instance for a static field).
+- `Link.render` now builds its `d` attribute with a real template literal.
+- Dead code removed after 2.1.0 (it may matter to a host poking at internals):
+  `Link.update()`, `Link.RAD` and the label position it fed (the label was
+  already commented out in the CoffeeScript original), `Avispa.links`,
+  `Avispa.position`, the `Arc` model in `Types.js`, and a no-op
+  `BaseObject.delegateEvents` override.
 - Port regressions vs. the CoffeeScript original (`git show 8e00f81:src/avispa.litcoffee`):
   `normalizeWheel` reads `event.originalEvent` (jQuery 3 dropped `event.props.push`, so
   `wheelDelta` was missing and every wheel tick reset zoom); `Zoom` clamps to

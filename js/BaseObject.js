@@ -25,10 +25,6 @@ class BaseObject extends Backbone.View {
             }
     }
 
-    delegateEvents(events) {
-        super.delegateEvents(events)
-    }
-
     initialize(options) {
         _.bindAll(this, 'OnMouseDown', 'OnMouseUp', 'OnContextMenu', 'render')
 
@@ -109,8 +105,6 @@ class BaseObject extends Backbone.View {
             this.ox1 = this.offset.x - this.position.get('x')
             this.oy1 = this.offset.y - this.position.get('y')
         }
-
-        // TODO: calculate the bounds of the parent element
 
         if (event.shiftKey) {
             this.$el.parent().append(this.$el)
