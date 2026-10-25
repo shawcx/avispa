@@ -42,7 +42,7 @@ class Group extends BaseObject {
 
         super.initialize(options)
 
-        this.position.bind('change:collapsed', this.UpdateVisibility, this)
+        this.listenTo(this.position, 'change:collapsed', this.UpdateVisibility)
     }
 
     render() {

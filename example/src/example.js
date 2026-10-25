@@ -126,6 +126,9 @@ $(document).ready(function() {
         left:   n3,
         right:  n4,
     })
+
+    // for poking at from the console, and for the tests
+    window.example = { graph, n1, n2, n3, n4, link1, link2, link3, link4 }
 })
 
 class Graph extends Avispa.Avispa {

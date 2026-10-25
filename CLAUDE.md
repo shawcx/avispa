@@ -10,8 +10,11 @@ plus a companion SCSS/CSS theme under `scss/` and `css/`. It is consumed as an n
 package (`@shawcx/avispa`) and bundled by the host app (the example uses browserify).
 There is no build step for the JS itself — consumers bundle `js/` directly.
 
-Runtime dependencies: jQuery, Underscore, Backbone. Classes extend `Backbone.View`
-and `Backbone.Model`.
+Runtime dependencies: jQuery, Underscore, Backbone — `peerDependencies`, so the host
+supplies one copy of each (also `devDependencies` here, for the example and tests).
+Classes extend `Backbone.View` and `Backbone.Model`. The published package is just
+`js/`, `css/`, and `scss/` (the `files` field). `.github/dependabot.yml` opens weekly
+update PRs for npm (root and `example/`) and GitHub Actions.
 
 ## Commands
 
@@ -98,7 +101,9 @@ g.pan > g.zoom > { g.groups, g.links, g.objects, g.labels }
   `context.a.scale` and writes back to `position`. The constructor calls `render()`
   once the whole `initialize` chain has run (so subclasses never call it themselves,
   and their own elements exist first); `initialize` binds `render` to `change` only
-  after the initial `ParentDrag` for the same reason. `Link` does the same.
+  after the initial `ParentDrag` for the same reason. `Link` does the same. Model
+  listeners use `listenTo`, so Backbone's `remove()` drops them; `BaseObject.remove()`
+  also takes the item out of `parent.children` (it doesn't remove links to it).
 - **`Node`** (`js/Node.js`) — `circle` + `text` in a `g.node`. Its `Drag` clamps the
   node inside the parent group's bounds.
 - **`Group`** (`js/Group.js`) — `rect` + label in a `g.group`. Its `Drag` can *grow*
@@ -146,7 +151,8 @@ Host apps subclass the exported classes (`Avispa`, `Group`, `Node`, `Link`) and
 override `initialize` (calling `super`), `render`, `OnMessage`, and the `*Click` /
 `OnContextMenu` hooks. `example/src/example.js` is the reference for wiring: construct
 items with a `new Avispa.Position({...})`, then `append` their `$el` into the right
-layer (`graph.$groups`, `graph.$objects`, etc.). `Avispa.js` re-exports `Position`,
+layer (`graph.$groups`, `graph.$objects`, etc.). The example puts its items on
+`window.example` for the console and the tests. `Avispa.js` re-exports `Position`,
 `Group`, `Node`, `Link`, `Socket`, `$SVG`, and `cancelEvent`.
 
 ## Known state / gotchas

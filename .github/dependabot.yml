@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # example/ has no lockfile, so only its package.json ranges get bumped
+  - package-ecosystem: npm
+    directories: ["/", "/example"]
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

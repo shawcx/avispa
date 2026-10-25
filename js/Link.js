@@ -38,17 +38,17 @@ class Link extends Backbone.View {
         _.bindAll(this, 'render', 'OnMouseDown', 'OnMouseEnter', 'OnMouseLeave', 'OnContextMenu')
 
         this.arc = new Backbone.Model({arc:10})
-        this.arc.bind('change', this.render, this)
+        this.listenTo(this.arc, 'change', this.render)
 
         this.left  = options.left
         this.right = options.right
-        this.left.position.bind('change', this.render, this)
-        this.right.position.bind('change', this.render, this)
+        this.listenTo(this.left.position,  'change', this.render)
+        this.listenTo(this.right.position, 'change', this.render)
 
         // re-render when a group around either end collapses or expands
         for (const end of [this.left, this.right]) {
             for (let p = end.parent; p; p = p.parent) {
-                p.position.bind('change:collapsed', this.render, this)
+                this.listenTo(p.position, 'change:collapsed', this.render)
             }
         }
 

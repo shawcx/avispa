@@ -43,15 +43,24 @@ class BaseObject extends Backbone.View {
                 y: this.position.get('y'),
                 }
             this.ParentDrag(this.parent.position)
-            this.parent.position.bind('change', this.ParentDrag, this)
+            this.listenTo(this.parent.position, 'change', this.ParentDrag)
             this.$el.css('display', this.CollapsedAncestor() ? 'none' : '')
         }
 
         // bound after the initial ParentDrag: a subclass is still building its
         // elements here, and the constructor renders once initialize is done
         if (this.position) {
-            this.position.bind('change', this.render, this)
+            this.listenTo(this.position, 'change', this.render)
         }
+    }
+
+    // stopListening (in Backbone's remove) drops the model listeners; leaving
+    // the parent's children keeps a removed item out of its sizing and collapse
+    remove() {
+        if (this.parent) {
+            this.parent.children = _.without(this.parent.children, this)
+        }
+        return super.remove()
     }
 
     // the outermost collapsed group containing this item, or null if it is on screen

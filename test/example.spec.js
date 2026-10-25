@@ -348,6 +348,40 @@ test('double-clicking a title collapses and expands groups, nested ones included
     expect(await state(page)).toEqual(s)
 })
 
+test('a removed item stops following its models and leaves its group', async ({ page }) => {
+    // Node 2 and the links to it
+    const removed = () => page.evaluate(() => ({
+        n2:    window.example.n2.position.pick('x', 'y'),
+        link3: window.example.link3.path.attr('d'),
+    }))
+    await page.evaluate(() => {
+        const { n2, link2, link3 } = window.example
+        for (const item of [link2, link3, n2]) item.remove()
+    })
+    const before = await removed()
+    const s = await state(page)
+    expect(Object.keys(s.nodes)).toEqual(['Node 1', 'Node 3', 'Node 4'])
+    expect(s.links).toHaveLength(2)
+
+    // moving Node 2's group and Node 4, the other end of a removed link,
+    // no longer reaches them
+    const g1   = s.groups['Group 1']
+    const from = await toPage(page, g1.x + 10, g1.y + g1.h - 10)
+    await drag(page, from, [from[0] - 50, from[1] - 30])
+    const n4 = s.nodes['Node 4']
+    await drag(page, await toPage(page, n4.x, n4.y), await toPage(page, n4.x - 10, n4.y + 10))
+    let t = await state(page)
+    expectAt(t.groups['Group 1'], g1.x - 50, g1.y - 30)
+    expectAt(t.nodes['Node 4'], n4.x - 10, n4.y + 10)
+    expect(await removed()).toEqual(before)
+
+    // and Group 1 now shrinks to fit just Node 1 (offset 35,55, radius 30)
+    const at = await groupPoint(page, 'Group 1', 'rect.handle')
+    await drag(page, at, [at[0] - 150, at[1] - 150])
+    t = await state(page)
+    expect(t.groups['Group 1']).toMatchObject({ w: 65, h: 85 })
+})
+
 test.describe('touch', () => {
     test.use({ hasTouch: true })
 

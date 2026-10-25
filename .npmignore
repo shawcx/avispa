@@ -1,7 +1,0 @@
-node_modules
-/example
-/shawcx-avispa*
-/test
-/playwright.config.js
-/test-results
-/playwright-report

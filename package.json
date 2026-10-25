@@ -5,6 +5,11 @@
   "main": "js/Avispa.js",
   "sass": "scss/Avispa.scss",
   "style": "css/Avispa.css",
+  "files": [
+    "js",
+    "css",
+    "scss"
+  ],
   "scripts": {
     "build": "npx sass scss/Avispa.scss css/Avispa.css",
     "example": "npm --prefix example install && npm --prefix example start",
@@ -22,13 +27,16 @@
     "url": "https://github.com/shawcx/avispa/issues"
   },
   "homepage": "https://github.com/shawcx/avispa#readme",
-  "dependencies": {
+  "peerDependencies": {
     "backbone": "^1.4.1",
     "jquery": "^3.6.3",
     "underscore": "^1.13.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
-    "sass": "^1.58.2"
+    "backbone": "^1.4.1",
+    "jquery": "^3.6.3",
+    "sass": "^1.58.2",
+    "underscore": "^1.13.6"
   }
 }
